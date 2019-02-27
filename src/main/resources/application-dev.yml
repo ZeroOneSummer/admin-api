@@ -1,0 +1,62 @@
+
+#数据库连接信息
+datasource:
+  host: 47.96.22.102
+  port: 3306
+  username: small_new
+  password: Qfsm_allK42xJn
+  databasename: small_new
+
+#缓存连接信息
+redis:
+  host: 192.168.1.28
+  port: 6379
+  password:
+
+#外部服务HTTP - hosts配置
+hosts:
+  a-sys: http://192.168.2.20:8080     #A系统
+  b-sys: http://120.77.46.4:19400     #B系统(转机构)
+  i-sys: http://47.96.22.102:8104     #I系统
+  ia-sys: http://47.97.120.245:8104   #I系统KKA
+  audit-sys: http://47.96.22.102:8099 #审批服务
+  user-level: http://127.0.0.1:8084   #用户等级服务
+
+#短信相关参数
+sms:
+  ip: ${hosts.i-sys}/api/ms #I短信网关地址
+  sms_switch: true #短信调用开关
+  sign: jackySign #短信接口盐值
+  smsAppKey: ss1  #应用秘钥
+  channelNo: ssm_buyback #短信模板号
+  smsAppKey_repoAudit: kk1  #回购审批完成的短信应用秘钥
+  channelNo_repoAudit: KKG-HGWCTS #回购审批完成短信模板号
+
+#特殊账号collectionAccount(targetAccId为红冲转入方AccId,sourceAccId为蓝补转出方AccId)
+collectionAccount:
+  targetAccId: 3
+  sourceAccId: 3
+
+#券划账
+coupons:
+ delimitFlag: true  #是否划账【可不配置,默认是】
+
+#调用百秒接口的验签文件存放目录
+key:
+ path: /Users/mok/Desktop/keys/
+
+#上传二进制文件临时目录
+tomcatTempDir: /data/apps/s_sys/admin_api/upload/
+
+#服务商机构导出模版
+templatePath: /data/apps/s_sys/admin_api/config/dealer.xlsx
+
+#提供I调用的接口的统一盐值
+iSalt: 6458fdfg52sgttyirke53gf46gg6774
+
+#调I接口加密用到的key
+iKey: j123456
+
+#对应商城【kkg|kka|ssm|jy|dj】
+mall:
+  code: kkg

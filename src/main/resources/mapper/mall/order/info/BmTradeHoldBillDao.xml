@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.mall.order.info.BmTradeHoldBillDao">
+  
+  <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.mall.order.info.BmTradeHoldBill">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="acc_id" jdbcType="VARCHAR" property="accId" />
+    <result column="charge_referr" jdbcType="DECIMAL" property="chargeReferr" />
+    <result column="margin_used" jdbcType="DECIMAL" property="marginUsed" />
+    <result column="margin_used_calc" jdbcType="REAL" property="marginUsedCalc" />
+    <result column="price_open" jdbcType="DECIMAL" property="priceOpen" />
+    <result column="quantity_hold" jdbcType="INTEGER" property="quantityHold" />
+    <result column="skustr" jdbcType="VARCHAR" property="skustr" />
+    <result column="margin_calculet_type" jdbcType="VARCHAR" property="marginCalculetType" />
+    <result column="charge_open" jdbcType="DECIMAL" property="chargeOpen" />
+    <result column="sku" jdbcType="VARCHAR" property="sku" />
+    <result column="order_code" jdbcType="VARCHAR" property="orderCode" />
+    <result column="order_code_re" jdbcType="VARCHAR" property="orderCodeRe" />
+    <result column="price_hold" jdbcType="DECIMAL" property="priceHold" />
+    <result column="symbol_id" jdbcType="BIGINT" property="symbolId" />
+    <result column="delivery_margin" jdbcType="DECIMAL" property="deliveryMargin" />
+    <result column="delivery_status" jdbcType="VARCHAR" property="deliveryStatus" />
+    <result column="price_stop_lose" jdbcType="DECIMAL" property="priceStopLose" />
+    <result column="daily_s_profit" jdbcType="DECIMAL" property="dailySProfit" />
+    <result column="contract_size" jdbcType="DOUBLE" property="contractSize" />
+    <result column="settlement_profit" jdbcType="DECIMAL" property="settlementProfit" />
+    <result column="charge_interest" jdbcType="DECIMAL" property="chargeInterest" />
+    <result column="price_take_profit" jdbcType="DECIMAL" property="priceTakeProfit" />
+    <result column="open_date" jdbcType="VARCHAR" property="openDate" />
+    <result column="contract_id" jdbcType="BIGINT" property="contractId" />
+    <result column="delivery_time" jdbcType="VARCHAR" property="deliveryTime" />
+    <result column="daily_charge_interest" jdbcType="DECIMAL" property="dailyChargeInterest" />
+    <result column="bs_code" jdbcType="VARCHAR" property="bsCode" />
+    <result column="extra_accout_id" jdbcType="VARCHAR" property="extraAccoutId" />
+    <result column="extra_charge" jdbcType="DECIMAL" property="extraCharge" />
+    <result column="remarks" jdbcType="VARCHAR" property="remarks" />
+    <result column="close_date" jdbcType="VARCHAR" property="closeDate" />
+    <result column="price_close" jdbcType="REAL" property="priceClose" />
+    <result column="profit_close" jdbcType="REAL" property="profitClose" />
+    <result column="dealer_code" jdbcType="VARCHAR" property="dealerCode" />
+    <result column="dealer_name" jdbcType="VARCHAR" property="dealerName" />
+    <result column="org_name" jdbcType="VARCHAR" property="orgName" />
+    <result column="symbol_name" jdbcType="VARCHAR" property="symbolName" />
+  </resultMap>
+  
+  <sql id="Base_Column_List">
+    id, acc_id, charge_referr, margin_used, margin_used_calc, price_open, quantity_hold, 
+    skustr, margin_calculet_type, charge_open, sku, order_code, price_hold, symbol_id, 
+    delivery_margin, delivery_status, price_stop_lose, daily_s_profit, contract_size, 
+    settlement_profit, charge_interest, price_take_profit, open_date, contract_id, delivery_time, 
+    daily_charge_interest, bs_code, extra_accout_id, extra_charge, remarks
+  </sql>
+  
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from bm_trade_hold_bill
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  
+  <select id="queryObject" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select h.*, info.user_name, o.org_name, d.dealer_code , c.close_date, c.price_close, c.profit_close,c. order_code as order_code_re
+    from bm_user_account acc ,bm_user_infoBrief info ,bm_sys_organization o ,bm_dealer_info d,
+         bm_trade_hold_bill h
+         LEFT JOIN
+         bm_trade_close_bill c ON  c.order_code_re = h.order_code
+    <where>
+      h.id = #{id}
+      AND
+      h.acc_id = acc.acc_id
+      AND
+      info.user_id = acc.user_id
+      AND
+      o.org_id = info.org_id
+      AND
+      d.dealer_id = acc.dealer_id
+    </where>
+  </select>
+
+  <select id="queryList" resultMap="BaseResultMap">
+    select h.id, h.order_code, h.margin_used, h.price_open, h.quantity_hold, h.contract_size, h.bs_code, h.open_date, info.user_name, o.org_name, d.dealer_code , d.dealer_name ,s.symbol_name
+    from bm_trade_hold_bill h ,bm_user_account acc ,bm_user_infoBrief info ,bm_sys_organization o ,bm_dealer_info d ,bm_symbol_info s
+    <where>
+      h.margin_used &lt;&gt; 0
+      AND
+      h.acc_id = acc.acc_id
+      AND
+      info.user_id = acc.user_id
+      AND
+      o.org_id = info.org_id
+      AND
+      d.dealer_id = acc.dealer_id
+      AND
+      h.symbol_id = s.symbol_id
+
+      <if test="dealerId !=null and dealerId != ''">
+        AND
+        h.acc_id in (
+        SELECT acc_id FROM bm_user_account WHERE dealer_id = #{dealerId}
+        )
+      </if>
+
+      <if test="userName != null and userName != '' ">
+        and user_name like concat('%',#{userName},'%')
+      </if>
+      <if test="orderCode != null and orderCode != '' ">
+        and order_code = #{orderCode}
+      </if>
+      <if test="startTime != null">
+        AND open_date &gt; #{startTime}
+      </if>
+      <if test="endTime != null">
+        AND open_date &lt; #{endTime}
+      </if>
+    </where>
+    <choose>
+      <when test="sidx != null and sidx.trim() != ''">
+        order by ${sidx} ${order}
+      </when>
+      <otherwise>
+        order by id desc
+      </otherwise>
+    </choose>
+    <if test="offset != null and limit != null">
+      limit #{offset}, #{limit}
+    </if>
+  </select>
+  <select id="querySimpleList" resultMap="BaseResultMap">
+    select h.id, h.order_code, h.margin_used, h.price_open, h.quantity_hold, h.contract_size, h.bs_code, h.open_date, h.symbol_id, h.acc_id
+    from bm_trade_hold_bill h
+    <where>
+      h.margin_used &lt;&gt; 0
+      <if test="orderCode != null and orderCode != '' ">
+        and order_code = #{orderCode}
+      </if>
+      <if test="startTime != null and startTime != ''">
+        AND date_format(open_date, '%Y-%m-%d %H:%i:%s') &gt; #{startTime}
+      </if>
+      <if test="endTime != null and endTime != ''">
+        AND date_format(open_date, '%Y-%m-%d %H:%i:%s') &lt; #{endTime}
+      </if>
+    </where>
+    <choose>
+      <when test="sidx != null and sidx.trim() != ''">
+        order by ${sidx} ${order}
+      </when>
+      <otherwise>
+        order by open_date desc
+      </otherwise>
+    </choose>
+    <if test="offset != null and limit != null">
+      limit #{offset}, #{limit}
+    </if>
+  </select>
+
+  <select id="queryTotal" resultType="int">
+    select COUNT(1)
+    from bm_trade_hold_bill h
+    <where>
+      h.margin_used &lt;&gt; 0
+      <if test="orderCode != null and orderCode != '' ">
+        and order_code = #{orderCode}
+      </if>
+      <if test="startTime != null and startTime != ''">
+        AND date_format(open_date, '%Y-%m-%d %H:%i:%s') &gt; #{startTime}
+      </if>
+      <if test="endTime != null and endTime != ''">
+        AND date_format(open_date, '%Y-%m-%d %H:%i:%s') &lt; #{endTime}
+      </if>
+    </where>
+  </select>
+
+  <select id="selectByDate"  resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from bm_trade_hold_bill
+    where
+    margin_used &lt;&gt; 0
+    <if test="symbolId != null">
+      AND symbol_id = #{symbolId}
+    </if>
+    <if test="symbolCode != null">
+      AND symbol_id in (
+      SELECT symbol_id FROM bm_symbol_info
+      WHERE
+      symbol_code like CONCAT('%',#{symbolCode},'%'))
+    </if>
+    <if test="sku != null">
+      AND sku = #{sku}
+    </if>
+    <if test="bsCode != null">
+      AND bs_code = #{bsCode}
+    </if>
+    <if test="startTime != null">
+      AND open_date &gt; #{startTime}
+    </if>
+    <if test="endTime != null">
+      AND open_date &lt; #{endTime}
+    </if>
+    <if test="dealerId != null">
+      AND acc_id in (
+      SELECT acc_id FROM bm_user_account
+      WHERE
+      dealer_id = #{dealerId}
+      )
+    </if>
+    ORDER BY open_date
+  </select>
+</mapper>

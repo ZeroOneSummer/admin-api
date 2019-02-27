@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.reserve.coupons.CouponConditionDao">
+
+    <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.reserve.coupons.CouponCondition">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="coupon_no" jdbcType="VARCHAR" property="couponNo" />
+        <result column="type" jdbcType="VARCHAR" property="type" />
+        <result column="condition_type" jdbcType="VARCHAR" property="conditionType" />
+        <result column="condition_value" jdbcType="VARCHAR" property="conditionValue" />
+        <result column="status" jdbcType="VARCHAR" property="status" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="create_user" jdbcType="VARCHAR" property="createUser" />
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+        <result column="update_user" jdbcType="VARCHAR" property="updateUser" />
+    </resultMap>
+
+    <select id="queryObject" resultType="com.dms.api.modules.entity.reserve.coupons.CouponCondition">
+        select
+          id,
+          coupon_no,
+          `type`,
+          condition_type,
+          condition_value,
+          status,
+          create_time,
+          create_user,
+          update_time,
+          update_user
+        from
+          coupon_condition
+        where
+          id = #{id}
+    </select>
+
+    <select id="queryList" resultType="com.dms.api.modules.entity.reserve.coupons.CouponCondition">
+      select
+        id,
+        coupon_no,
+        `type`,
+        condition_type,
+        condition_value,
+        status,
+        create_time,
+        create_user,
+        update_time,
+        update_user
+      from
+        coupon_condition
+      <where>
+        <if test="couponNo != null and couponNo.trim() != '' ">
+          and coupon_no = #{couponNo}
+        </if>
+        <if test="conditionValue != null and conditionValue.trim() != '' ">
+          and condition_value = #{conditionValue}
+        </if>
+        <if test="status != null and status.trim() != '' ">
+          and status = #{status}
+        </if>
+      </where>
+      <choose>
+        <when test="sidx != null and sidx.trim() != ''">
+          order by ${sidx} ${sord}
+        </when>
+        <otherwise>
+          order by id desc
+        </otherwise>
+      </choose>
+      <if test="offset != null and limit != null">
+        limit #{offset}, #{limit}
+      </if>
+    </select>
+
+    <select id="queryTotal" resultType="int">
+      select
+        count(*)
+      from
+        coupon_condition
+      <where>
+        <if test="couponNo != null and couponNo.trim() != '' ">
+          and coupon_no = #{couponNo}
+        </if>
+        <if test="conditionValue != null and conditionValue.trim() != '' ">
+          and condition_value = #{conditionValue}
+        </if>
+        <if test="status != null and status.trim() != '' ">
+          and status = #{status}
+        </if>
+      </where>
+    </select>
+
+    <select id="queryCount" resultType="int">
+        select
+          count(*)
+        from
+          coupon_condition
+        where
+          condition_type = 'LEVEL'
+          and status = '1'
+          and coupon_no = #{couponNo}
+    </select>
+
+    <insert id="save" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponCondition">
+          insert into coupon_condition
+          (
+            `coupon_no`,
+            `type`,
+            `condition_type`,
+            `condition_value`,
+            `status`,
+            `create_time`,
+            `create_user`,
+            `update_time`,
+            `update_user`
+          )
+          values
+          (
+            #{couponNo},
+            #{type},
+            #{conditionType},
+            #{conditionValue},
+            #{status},
+            #{createTime},
+            #{createUser},
+            #{updateTime},
+            #{updateUser}
+          )
+      </insert>
+
+    <update id="update" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponCondition">
+      update coupon_condition
+      <set>
+        <if test="couponNo != null">`coupon_no` = #{couponNo}, </if>
+        <if test="type != null">`type` = #{type}, </if>
+        <if test="conditionType != null">`condition_type` = #{conditionType}, </if>
+        <if test="conditionValue != null">`condition_value` = #{conditionValue}, </if>
+        <if test="status != null">`status` = #{status}, </if>
+        <if test="createTime != null">`create_time` = #{createTime}, </if>
+        <if test="createUser != null">`create_user` = #{createUser}, </if>
+        <if test="updateTime != null">`update_time` = #{updateTime}, </if>
+        <if test="updateUser != null">`update_user` = #{updateUser}, </if>
+      </set>
+      where
+      id = #{id}
+    </update>
+
+    <delete id="delete">
+        delete from coupon_condition where id = #{id}
+    </delete>
+
+    <delete id="deleteBatch">
+      delete from coupon_condition where id in
+      <foreach item="id" collection="array" open="(" separator="," close=")">
+        #{id}
+      </foreach>
+    </delete>
+
+    <select id="queryRepeat" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponCondition" resultType="int">
+        SELECT
+          count(1)
+        FROM
+          coupon_condition
+        WHERE
+          coupon_no = #{couponNo}
+        <choose>
+            <when test="conditionType == 'LEVEL'">
+                AND condition_type = #{conditionType}
+                AND condition_value = #{conditionValue}
+            </when>
+            <otherwise>
+                AND condition_type = #{conditionType}
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

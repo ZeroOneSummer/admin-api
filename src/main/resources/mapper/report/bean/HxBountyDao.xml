@@ -1,0 +1,881 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.report.bean.HxBountyDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.dms.api.modules.entity.report.bean.HxBountyEntity" id="hxBountyMap">
+        <result property="id" column="id"/>
+        <result property="price" column="price"/>
+        <result property="type" column="type"/>
+        <result property="createTime" column="create_time"/>
+        <result property="sku" column="sku"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="draweeId" column="drawee_id"/>
+        <result property="payeeId" column="payee_id"/>
+        <result property="remark" column="remark"/>
+        <result property="status" column="status"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="userId" column="user_id"/>
+        <result property="isActive" column="is_active"/>
+        <result property="cashSurplus" column="cash_surplus"/>
+    </resultMap>
+
+    <select id="totalBounty" resultType="java.math.BigDecimal">
+        <!-- 	产生K豆总额 -->
+        select sum(bounty_in) from b_bill
+    </select>
+
+    <select id="usableBounty" resultType="java.math.BigDecimal">
+        <!--  可用K豆总额 -->
+        select sum(surplus_bounty) from b_bill
+        <where>
+            isValid=1
+        </where>
+    </select>
+
+    <select id="consumeBounty" resultType="java.math.BigDecimal">
+        <!-- 已消费K豆总额 -->
+        select sum(bounty_pay) from b_bill
+    </select>
+
+    <select id="pastBounty" resultType="java.math.BigDecimal">
+        <!--  已过期K豆总额 -->
+        SELECT SUM(invalid_amount) invalid_amount FROM `b_invalidamountflow`
+        <where>
+            status=1
+        </where>
+    </select>
+
+    <select id="valalidBounty" resultType="java.math.BigDecimal">
+        <!--  即将过期 -->
+        select sum(valalid_bounty-bounty_pay) from b_bill
+        <where>
+            isValid=1
+            and valalid_bounty > bounty_pay
+            and DATE_SUB(end_date, INTERVAL 15 DAY) &lt;= CURDATE()
+        </where>
+    </select>
+
+    <select id="dealerTotal" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			bm_dealer_info
+		WHERE
+		dealer_type = 1
+	</select>
+
+    <select id="ConsumeDetail" resultType="com.dms.api.modules.entity.report.bean.SingleConsumeDetail">
+        SELECT
+        f.user_name  AS nick_name,
+        b.active_type,
+        b.type,
+        b.price AS total,
+        b.create_time AS `DATE`,
+        b.order_no,
+        a.refund_diff
+        FROM
+        b_bounty b
+        LEFT JOIN(
+        #K豆退差价
+        SELECT
+        b.id AS id,
+        IFNULL(c.refund_diff,0) AS refund_diff
+        FROM
+        b_bounty b
+        LEFT JOIN(
+        SELECT
+        b.id  AS id,
+        b.price AS refund_diff #K豆退差价
+        FROM
+        b_bounty b
+        WHERE
+        b.type = 'B006'
+        ) c
+        ON c.id = b.id
+        ) a
+        ON a.id = b.id
+
+        JOIN bm_user_account t
+        ON b.acc_id = t.acc_id
+        JOIN bm_user_infoBrief f
+        ON f.user_id = t.user_id
+
+        <where>
+            1 = 1
+            <if test="userId !=null and userId.trim() !=''">
+                AND b.acc_id =#{userId}
+            </if>
+            <if test="type !=null and type.trim() !=''">
+                AND b.type =#{type}
+            </if>
+            <if test="orderNo !=null and orderNo.trim() !=''">
+                AND b.order_no=#{orderNo}
+            </if>
+            <if test="startTime !=null and startTime.trim() !=''">
+                AND b.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime !=null and endTime.trim() !=''">
+                AND b.create_time &lt;= #{endTime}
+            </if>
+        </where>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                ORDER BY ${sidx} ${ORDER}
+            </when>
+            <otherwise>
+                ORDER BY b.id DESC
+            </otherwise>
+        </choose>
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+
+    </select>
+
+    <select id="ConsumeDetailTotal" resultType="int">
+        select COUNT(*) from b_bounty b,bm_user_infoBrief f,bm_user_account t
+        <where>
+            b.acc_id= t.acc_id and f.user_id=t.user_id
+            <if test="userId !=null and userId.trim() !=''">
+                and b.acc_id =#{userId}
+            </if>
+            <if test="type !=null and type.trim() !=''">
+                and b.type =#{type}
+            </if>
+            <if test="orderNo !=null and orderNo.trim() !=''">
+                AND b.order_no=#{orderNo}
+            </if>
+            <if test="startTime !=null and startTime.trim() !=''">
+                AND b.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime !=null and endTime.trim() !=''">
+                AND b.create_time &lt;= #{endTime}
+            </if>
+        </where>
+    </select>
+
+    <select id="orgList" resultType="com.dms.api.modules.entity.report.bean.OrgCount">
+        select org1.org_code,org1.org_name,org1.org_id from bm_sys_organization org1
+        <where>
+            org1.dealer_id > 0
+            <if test="orgCode != null and orgCode != ''">
+                and org1.org_code like concat('%',#{orgCode},'%')
+            </if>
+            <if test="orgName != null and orgName != ''">
+                and org1.org_name like concat('%',#{orgName},'%')
+            </if>
+            <if test="orgIds != null">
+                and org1.org_id IN
+                <foreach item="item" index="index" collection="orgIds" open="(" separator="," close=")">
+                    #{item.orgId}
+                </foreach>
+            </if>
+            <if test="dealerId != null and dealerId != ''">
+                and org1.broker_dealer_id =  #{dealerId}
+            </if>
+        </where>
+        <if test="offset != null and limit != null">
+            limit #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="orgTotalFirst" resultType="int">
+        select count(*) from bm_sys_organization org1
+        <where>
+            org1.dealer_id > 0
+            <if test="orgCode != null and orgCode != ''">
+                and org1.org_code like concat('%',#{orgCode},'%')
+            </if>
+            <if test="orgName != null and orgName != ''">
+                and org1.org_name like concat('%',#{orgName},'%')
+            </if>
+            <if test="orgIds != null">
+                and org1.org_id IN
+                <foreach item="item" index="index" collection="orgIds" open="(" separator="," close=")">
+                    #{item.orgId}
+                </foreach>
+            </if>
+            <if test="dealerId != null and dealerId != ''">
+                and org1.broker_dealer_id =  #{dealerId}
+            </if>
+        </where>
+    </select>
+
+    <select id="dealerListFirst" resultType="com.dms.api.modules.entity.report.bean.DealerCount">
+        SELECT d.dealer_id,d.dealer_name,d.dealer_code from bm_dealer_info d
+        <where>
+            <!--查询类型为服务商的商家 TODO-->
+            d.dealer_type = 3
+            <if test="dealerId !=null and dealerId !=''">
+                AND d.dealer_id=#{dealerId}
+            </if>
+        </where>
+        <if test="offset != null and limit != null">
+            limit #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="dealerTotalFirst" resultType="int">
+        SELECT count(*) from bm_dealer_info d
+        <where>
+            <!--查询类型为服务商的商家 TODO-->
+            d.dealer_type = 3
+            <if test="dealerId !=null and dealerId !=''">
+                AND d.dealer_id=#{dealerId}
+            </if>
+        </where>
+    </select>
+
+    <!--统计版本2 说明：由优化K豆服务之后进行统计-->
+    <select id="billsByDealers" resultType="com.dms.api.modules.entity.report.bean.BBillEntity">
+        select
+        broker_dealer_id as dealer_id,
+        isValid,
+        sum(surplus_bounty) as surplus_bounty,
+        sum(if(lose_days &lt;= 15, lose_bounty, 0)) as valalid_bounty
+        from view_b_bill_org where isValid
+        AND broker_dealer_id  in
+        <foreach item="item" index="index" collection="dealerList" open="(" separator="," close=")">
+            #{item.dealerId}
+        </foreach>
+        group by broker_dealer_id,isValid;
+    </select>
+
+    <select id="invalidByDealers" resultType="com.dms.api.modules.entity.report.bean.BInvalidamountfolwEntity">
+        SELECT
+        sum(w.invalid_amount) as invalid_amount,
+        n.broker_dealer_id as dealer_id
+        FROM
+        b_invalidamountflow w,
+        bm_user_account t ,
+        bm_user_infoBrief f,
+        bm_sys_organization n
+        WHERE
+        t.user_id = f.user_id
+        AND f.org_id = n.org_id
+        AND n.broker_dealer_id  in
+        <foreach item="item" index="index" collection="dealers" open="(" separator="," close=")">
+            #{item.dealerId}
+        </foreach>
+        AND w.acc_id = t.acc_id
+        AND t.acc_type = 1
+        GROUP BY
+        n.broker_dealer_id;
+    </select>
+
+    <select id="billsByOrgs" resultType="com.dms.api.modules.entity.report.bean.BBillEntity">
+        select
+          org_id,
+          isValid,
+          sum(surplus_bounty) as surplus_bounty,
+          sum(if(lose_days &lt;= 15, lose_bounty, 0)) as valalid_bounty
+        from view_b_bill_org where isValid
+        and org_id in
+        <foreach item="item" index="index" collection="orgList" open="(" separator="," close=")">
+            #{item.orgId}
+        </foreach>
+        group by org_id,isValid;
+    </select>
+
+    <select id="invalidByOrgs" resultType="com.dms.api.modules.entity.report.bean.BInvalidamountfolwEntity">
+        SELECT
+        sum(w.invalid_amount) as invalid_amount,
+        f.org_id
+        FROM
+        b_invalidamountflow w,
+        bm_user_account t,
+        bm_user_infoBrief f
+        WHERE
+        f.org_id in
+        <foreach item="item" index="index" collection="orgs" open="(" separator="," close=")">
+            #{item.orgId}
+        </foreach>
+        AND w.acc_id = t.acc_id
+        AND t.user_id = f.user_id
+        AND t.acc_type = 1
+        GROUP BY
+        f.org_id ;
+    </select>
+
+    <select id="singleInfo" resultType="com.dms.api.modules.entity.report.bean.SingleCount">
+        select
+            vu.user_name as nick_name,
+            vu.login_code,
+            CONCAT(SUBSTR(vu.phone, 1, 3) ,'****', SUBSTR(vu.phone, 8,11)) as user_mobile,
+            ud.days as currentEndTime,
+            o.dealer_name ,
+            o.dealer_code,
+            ud.acc_id,
+            vu.bm_org_name as org_name,
+            vu.bm_org_num as org_code
+        from b_usr_detail ud inner join view_bm_users vu on ud.acc_id = vu.acc_id
+        inner join bm_dealer_info o on o.dealer_id=vu.broker_dealer_id
+        WHERE 1=1
+        <if test="nickName !=null and nickName != ''">
+            AND vu.user_name like concat('%',#{nickName},'%')
+        </if>
+        <if test="loginCode !=null and loginCode != ''">
+            AND vu.login_code = #{loginCode}
+        </if>
+        <if test="userMobile !=null and userMobile != ''">
+            AND vu.phone = #{userMobile}
+        </if>
+        <if test="baseInfoName !=null and baseInfoName != ''">
+            AND o.dealer_name = #{baseInfoName}
+        </if>
+        <if test="dealerName !=null and dealerName != ''">
+            AND o.dealer_code = #{dealerName}
+        </if>
+        <if test="dealerCode !=null and dealerCode != ''">
+            AND o.dealer_code = #{dealerCode}
+        </if>
+        <if test="orgName !=null and orgName != ''">
+            AND vu.bm_org_name = #{orgName}
+        </if>
+        <if test="orgCode !=null and orgCode != ''">
+            AND vu.bm_org_num like concat('%',#{orgCode},'%')
+        </if>
+        <if test="dealerId !=null and dealerId != ''">
+            AND vu.broker_dealer_id = #{dealerId}
+        </if>
+        <if test="orgIds !=null and orgIds.size>0">
+            AND vu.org_id IN
+            <foreach item="item" index="index" collection="orgIds" open="(" separator="," close=")">
+                #{item.orgId}
+            </foreach>
+        </if>
+        <if test="offset != null and limit != null">
+            limit #{offset}, #{limit}
+        </if>
+        ;
+    </select>
+
+    <select id="singleTotal" resultType="int">
+        SELECT
+        count(*)
+        from b_usr_detail ud inner join view_bm_users vu on ud.acc_id = vu.acc_id
+        inner join bm_sys_organization n on n.org_id=vu.org_id
+        inner join bm_dealer_info o on o.dealer_id=n.broker_dealer_id
+        WHERE 1=1
+        <if test="nickName !=null and nickName != ''">
+            AND vu.user_name like concat('%',#{nickName},'%')
+        </if>
+        <if test="loginCode !=null and loginCode != ''">
+            AND vu.login_code = #{loginCode}
+        </if>
+        <if test="userMobile !=null and userMobile != ''">
+            AND vu.phone = #{userMobile}
+        </if>
+        <if test="baseInfoName !=null and baseInfoName != ''">
+            AND o.dealer_name = #{baseInfoName}
+        </if>
+        <if test="dealerName !=null and dealerName != ''">
+            AND o.dealer_code = #{dealerName}
+        </if>
+        <if test="dealerCode !=null and dealerCode != ''">
+            AND o.dealer_code = #{dealerCode}
+        </if>
+        <if test="orgName !=null and orgName != ''">
+            AND n.org_name = #{orgName}
+        </if>
+        <if test="orgCode !=null and orgCode != ''">
+            AND n.org_code like concat('%',#{orgCode},'%')
+        </if>
+        <if test="dealerId !=null and dealerId != ''">
+            AND n.broker_dealer_id = #{dealerId}
+        </if>
+        <if test="orgIds !=null and orgIds.size>0">
+            AND n.org_id IN
+            <foreach item="item" index="index" collection="orgIds" open="(" separator="," close=")">
+                #{item.orgId}
+            </foreach>
+        </if>
+        ;
+    </select>
+
+    <select id="countSingleBounty" resultType="com.dms.api.modules.entity.report.bean.SingleCount">
+        SELECT t1.*,t2.invalid FROM
+        (SELECT
+        acc_id,
+        sum(income) AS total,
+        sum(consume) AS consume
+        FROM
+        view_bounty_daily_settlement
+        WHERE
+        acc_id IN
+        <foreach item="item" index="index" collection="singles" open="(" separator="," close=")">
+            #{item.accId}
+        </foreach>
+        <if test="startTime !=null and startTime !=''">
+            AND trading_day &gt;= LEFT (#{startTime},10)
+        </if>
+        <if test="endTime !=null and endTime !=''">
+            AND trading_day &lt;= LEFT (#{endTime},10)
+        </if>
+        GROUP BY
+        acc_id) t1
+        LEFT JOIN
+        (SELECT
+        acc_id,
+        SUM(invalid_amount) AS invalid
+        FROM
+        `b_invalidamountflow`
+        WHERE
+        acc_id IN
+        <foreach item="item" index="index" collection="singles" open="(" separator="," close=")">
+            #{item.accId}
+        </foreach>
+        <if test="startTime !=null and startTime !=''">
+            AND failure_time &gt;=#{startTime}
+        </if>
+        <if test="endTime !=null and endTime !=''">
+            AND failure_time &lt;= #{endTime}
+        </if>
+        GROUP BY
+        acc_id) t2
+        ON t1.acc_id = t2.acc_id;
+    </select>
+
+    <!--日结报表相关-->
+    <select id="getMinDateByOrgId" resultType="java.lang.String">
+
+        SELECT
+            DATE_FORMAT(
+                SUBDATE(
+                    min(IFNULL(b.complete_time,b.create_time)),
+                    INTERVAL 4 HOUR
+                ),
+                '%Y-%m-%d'
+            ) trading_day
+        FROM
+            b_bounty b,
+            bm_sys_organization org,
+            view_bm_users users
+            WHERE
+             org.org_id = #{orgId}
+             AND org.org_id = users.org_id
+             AND b.acc_id = users.acc_id
+
+    </select>
+
+    <select id="getSettlementByOrgId" resultType="com.dms.api.modules.entity.report.bean.TypeSettlementEntity">
+        SELECT
+        bountys.trading_day,
+        sum(bountys.price) AS price,
+        bountys.type
+        FROM
+        bm_sys_organization org,
+        view_bm_users users,
+        (
+        SELECT
+        DATE_FORMAT(
+        SUBDATE(
+        IFNULL(b.complete_time,b.create_time),
+        INTERVAL 4 HOUR
+        ),
+        '%Y-%m-%d'
+        ) trading_day,
+        b.acc_id,
+        b.type,
+        b.price
+        FROM
+        b_bounty b
+        WHERE 1=1
+        <if test="list !=null and list.size >0 ">
+            AND DATE_FORMAT(
+            SUBDATE(
+            IFNULL(b.complete_time,b.create_time),
+            INTERVAL 4 HOUR
+            ),
+            '%Y-%m-%d'
+            ) IN
+            <foreach item="date" collection="list" open="(" separator="," close=")">
+                #{date}
+            </foreach>
+        </if>
+        ) bountys
+        WHERE
+        org.org_id = #{orgId}
+        AND org.org_id = users.org_id
+        AND bountys.acc_id = users.acc_id
+        GROUP BY
+        trading_day,
+        type
+        ORDER BY
+        trading_day ASC;
+    </select>
+
+    <select id="getDailyInvalidByOrgId" resultType="com.dms.api.modules.entity.report.bean.TypeSettlementEntity">
+        SELECT
+        bountys.trading_day,
+        sum(bountys.price) AS price
+        FROM
+        bm_sys_organization org,
+        view_bm_users users,
+        (
+        SELECT
+        DATE_FORMAT(
+        SUBDATE(
+        failure_time,
+        INTERVAL 4 HOUR
+        ),
+        '%Y-%m-%d'
+        ) trading_day,
+        b.acc_id,
+        b.invalid_amount as price
+        FROM
+        b_invalidamountflow b
+        WHERE 1=1  and b.status=1
+        <if test="list !=null and list.size >0 ">
+            AND DATE_FORMAT(
+            SUBDATE(
+            failure_time,
+            INTERVAL 4 HOUR
+            ),
+            '%Y-%m-%d'
+            ) IN
+            <foreach item="date" collection="list" open="(" separator="," close=")">
+                #{date}
+            </foreach>
+        </if>
+        ) bountys
+        WHERE
+        org.org_id = #{orgId}
+        AND org.org_id = users.org_id
+        AND bountys.acc_id = users.acc_id
+        GROUP BY
+        trading_day
+        ORDER BY
+        trading_day ASC;
+    </select>
+
+    <select id="countCurrentByOrgId" resultType="com.dms.api.modules.entity.report.bean.OrgCount">
+        SELECT
+        org.org_id,
+        sum(bountys.income) as total,
+        sum(bountys.consume) as consume
+        FROM
+        bm_sys_organization org,
+        view_bm_users users,
+        (
+        SELECT * FROM view_bounty_daily_settlement
+        WHERE trading_day = date_format(now(), '%Y-%m-%d')
+        ) bountys
+        WHERE
+        org.org_id = users.org_id
+        AND bountys.acc_id = users.acc_id
+        AND org.org_id in
+        <foreach item="obj" collection="orgList" open="(" separator="," close=")">
+            #{obj.orgId}
+        </foreach>
+        GROUP BY
+        org.org_id
+    </select>
+
+    <select id="countCurrentInvalidByOrgId" resultType="com.dms.api.modules.entity.report.bean.OrgCount">
+        SELECT
+        sum(bountys.price) AS invalid,
+        org.org_id
+        FROM
+        bm_sys_organization org,
+        view_bm_users users,
+        (
+        SELECT
+        b.acc_id,
+        b.invalid_amount as price
+        FROM
+        b_invalidamountflow b
+        WHERE SUBDATE(
+        b.failure_time,
+        INTERVAL 4 HOUR
+        ) = date_format(now(), '%Y-%m-%d')
+        ) bountys
+        WHERE
+        org.org_id IN
+        <foreach item="obj" collection="orgList" open="(" separator="," close=")">
+            #{obj.orgId}
+        </foreach>
+        AND org.org_id = users.org_id
+        AND bountys.acc_id = users.acc_id
+        GROUP BY
+        org.org_id;
+    </select>
+
+    <select id="getMinDateByDealerId" resultType="java.lang.String">
+        SELECT
+			DATE_FORMAT(
+				SUBDATE(
+					min(IFNULL(b.complete_time,b.create_time)),
+					INTERVAL 4 HOUR
+				),
+				'%Y-%m-%d'
+			) trading_day
+		FROM
+			b_bounty b,
+			bm_dealer_info info,
+			view_bm_users users
+			WHERE
+			b.acc_id = users.acc_id
+			AND info.dealer_code = users.servicenum
+			AND info.dealer_id = #{dealerId}
+    </select>
+
+    <select id="getSettlementByDealerId" resultType="com.dms.api.modules.entity.report.bean.TypeSettlementEntity">
+        SELECT
+        bountys.trading_day,
+        sum(bountys.price) AS price,
+        bountys.type
+        FROM
+        bm_dealer_info info,
+        view_bm_users users,
+        (
+        SELECT
+        DATE_FORMAT(
+        SUBDATE(
+        IFNULL(b.complete_time,b.create_time),
+        INTERVAL 4 HOUR
+        ),
+        '%Y-%m-%d'
+        ) trading_day,
+        b.acc_id,
+        b.type,
+        b.price
+        FROM
+        b_bounty b
+        WHERE 1=1
+        <if test="list !=null and list.size >0 ">
+            AND DATE_FORMAT(
+            SUBDATE(
+            IFNULL(b.complete_time,b.create_time),
+            INTERVAL 4 HOUR
+            ),
+            '%Y-%m-%d'
+            ) IN
+            <foreach item="date" collection="list" open="(" separator="," close=")">
+                #{date}
+            </foreach>
+        </if>
+        ) bountys
+        WHERE
+        info.dealer_id = #{dealerId}
+        AND info.dealer_code = users.servicenum
+        AND bountys.acc_id = users.acc_id
+        GROUP BY
+        trading_day,
+        type
+        ORDER BY
+        trading_day ASC;
+    </select>
+
+    <select id="getDailyInvalidByDealerId" resultType="com.dms.api.modules.entity.report.bean.TypeSettlementEntity">
+        SELECT
+        bountys.trading_day,
+        sum(bountys.price) AS price
+        FROM
+        bm_dealer_info info,
+        view_bm_users users,
+        (
+        SELECT
+        DATE_FORMAT(
+        SUBDATE(
+        failure_time,
+        INTERVAL 4 HOUR
+        ),
+        '%Y-%m-%d'
+        ) trading_day,
+        b.acc_id,
+        b.invalid_amount as price
+        FROM
+        b_invalidamountflow b
+        WHERE 1=1  and b.status=1
+        <if test="list !=null and list.size >0 ">
+            AND DATE_FORMAT(
+            SUBDATE(
+            failure_time,
+            INTERVAL 4 HOUR
+            ),
+            '%Y-%m-%d'
+            ) IN
+            <foreach item="date" collection="list" open="(" separator="," close=")">
+                #{date}
+            </foreach>
+        </if>
+        ) bountys
+        WHERE
+        info.dealer_id = #{dealerId}
+        AND info.dealer_code = users.servicenum
+        AND bountys.acc_id = users.acc_id
+        GROUP BY
+        trading_day
+        ORDER BY
+        trading_day ASC;
+    </select>
+
+    <select id="countCurrentByDealerId" resultType="com.dms.api.modules.entity.report.bean.DealerCount">
+        SELECT
+        info.dealer_id,
+        sum(bountys.income) as total,
+        sum(bountys.consume) as consume
+        FROM
+        bm_dealer_info info,
+        view_bm_users users,
+        (
+        SELECT * FROM view_bounty_daily_settlement
+        WHERE trading_day = date_format(now(), '%Y-%m-%d')
+        ) bountys
+        WHERE
+        info.dealer_code = users.servicenum
+        AND bountys.acc_id = users.acc_id
+        AND info.dealer_id IN
+        <foreach item="obj" collection="dealerList" open="(" separator="," close=")">
+            #{obj.dealerId}
+        </foreach>
+        GROUP BY
+        info.dealer_id
+    </select>
+
+    <select id="countHistory" resultType="com.dms.api.modules.entity.report.bean.BountyDailySettlementEntity">
+        SELECT
+        <if test="orgList !=null and orgList.size>0">
+            org_id,
+        </if>
+        <if test="dealerList !=null and dealerList.size>0">
+            dealer_id,
+        </if>
+        sum(income) as income
+        ,sum(consume) as consume
+        ,sum(invalid) as invalid
+        from bounty_daily_settlement
+        where 1=1
+        <if test="startTime !=null and startTime !=''">
+            AND trading_day &gt;= LEFT (#{startTime},10)
+        </if>
+        <if test="endTime !=null and endTime !=''">
+            AND trading_day &lt;= LEFT (#{endTime},10)
+        </if>
+        <if test="orgList !=null and orgList.size>0">
+            AND org_id IN
+            <foreach item="obj" collection="orgList" open="(" separator="," close=")">
+                #{obj.orgId}
+            </foreach>
+        </if>
+        <if test="dealerList !=null and dealerList.size>0">
+            AND dealer_id IN
+            <foreach item="obj" collection="dealerList" open="(" separator="," close=")">
+                #{obj.dealerId}
+            </foreach>
+        </if>
+        GROUP BY
+        <if test="orgList !=null and orgList.size>0">
+            org_id
+        </if>
+        <if test="dealerList !=null and dealerList.size>0">
+            dealer_id
+        </if>
+        ;
+    </select>
+
+    <select id="countCurrentInvalidByDealerId" resultType="com.dms.api.modules.entity.report.bean.DealerCount">
+        SELECT
+        sum(bountys.price) AS invalid,
+        info.dealer_id
+        FROM
+        bm_dealer_info info,
+        view_bm_users users,
+        (
+        SELECT
+        SUBDATE(
+        b.failure_time,
+        INTERVAL 4 HOUR
+        ) trading_day,
+        b.acc_id,
+        b.invalid_amount as price
+        FROM
+        b_invalidamountflow b
+        WHERE SUBDATE(
+        b.failure_time,
+        INTERVAL 4 HOUR
+        ) = date_format(now(), '%Y-%m-%d')
+        ) bountys
+        WHERE
+        info.dealer_id IN
+        <foreach item="obj" collection="dealerList" open="(" separator="," close=")">
+            #{obj.dealerId}
+        </foreach>
+        AND info.dealer_code = users.servicenum
+        AND bountys.acc_id = users.acc_id
+        GROUP BY
+        info.dealer_id;
+    </select>
+
+    <select id="getTotalByDealerId" parameterType="java.util.Map" resultType="com.dms.api.modules.entity.report.bean.TypeSettlementEntity">
+        <foreach item="item" index="index" collection="list" separator=" UNION ALL ">
+            SELECT #{item} as trading_day, price from (
+            SELECT
+            sum(bounty.price) as price
+            FROM
+            bm_dealer_info info,
+            view_bm_users users,
+            b_bounty bounty
+            WHERE
+            info.dealer_id = #{dealerId}
+            AND bounty.type = 'B010'
+            AND DATE_FORMAT(
+            SUBDATE(
+            bounty.complete_time,
+            INTERVAL 4 HOUR
+            ),
+            '%Y-%m-%d'
+            ) &lt; #{item}
+            AND info.dealer_code = users.servicenum
+            AND bounty.acc_id = users.acc_id
+            ) t${index}
+        </foreach>
+    </select>
+
+    <select id="invalidBySingle" resultType="com.dms.api.modules.entity.report.bean.BInvalidamountfolwEntity">
+        SELECT
+        SUM(b.invalid_amount) invalid_amount,
+        b.acc_id
+        FROM
+        `b_invalidamountflow` b
+        WHERE
+        acc_id IN
+        <foreach item="item" index="index" collection="singles" open="(" separator="," close=")">
+            #{item.accId}
+        </foreach>
+        <if test="startTime !=null and startTime !=''">
+            AND failure_time &gt;=#{startTime}
+        </if>
+        <if test="endTime !=null and endTime !=''">
+            AND failure_time &lt;= #{endTime}
+        </if>
+        GROUP BY
+        b.acc_id
+    </select>
+
+    <select id="billsBySingle" resultType="com.dms.api.modules.entity.report.bean.BBillEntity">
+        SELECT
+        acc_id,isValid,
+        SUM(bounty_in) bounty_in,
+        SUM(surplus_bounty) surplus_bounty,
+        SUM(bounty_pay) bounty_pay,
+        SUM(valalid_bounty) valalid_bounty
+        FROM
+        b_bill WHERE 1=1
+        <if test="singles != null and singles.size>0">
+            and acc_id in
+            <foreach item="item" index="index" collection="singles" open="(" separator="," close=")">
+                #{item.accId}
+            </foreach>
+        </if>
+        GROUP BY
+        acc_id,isValid
+    </select>
+
+    <select id="getOrgsByDealerId" resultType="long">
+        select org_code from bm_sys_organization b where b.broker_dealer_id=#{dealerId}
+    </select>
+
+</mapper>

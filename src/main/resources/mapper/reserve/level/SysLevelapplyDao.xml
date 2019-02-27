@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dms.api.modules.dao.reserve.level.SysLevelapplyDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.dms.api.modules.entity.reserve.level.SysLevelapplyEntity" id="sysLevelapplyMap">
+        <result property="id" column="id"/>
+        <result property="logincode" column="loginCode"/>
+        <result property="prelevelcode" column="preLevelCode"/>
+        <result property="targetlevelcode" column="targetLevelCode"/>
+        <result property="status" column="status"/>
+        <result property="createtime" column="createTime"/>
+        <result property="verifytime" column="verifyTime"/>
+        <result property="updatetime" column="updateTime"/>
+        <result property="operator" column="operator"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.dms.api.modules.entity.reserve.level.SysLevelapplyEntity">
+		select * from sys_levelapply where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.dms.api.modules.entity.reserve.level.SysLevelapplyEntity">
+		select * from sys_levelapply 
+		<where>
+		   <if test="username !=null and username.trim() != '' ">
+		        and `loginCode` like concat('%',#{username},'%')
+		   </if>
+		   <if test="level !=null and level.trim() != '' ">
+		          and targetLevelCode=#{level}
+		   </if>
+		   <if test="status !=null and status.trim() != '' ">
+		          and status=#{status}
+		   </if>
+			<if test="dealerId != null and dealerId != '' ">
+				logincode IN (
+				SELECT
+				login_code
+				FROM
+				bm_user_infoBrief info,
+				bm_user_account acc
+				WHERE
+				acc.dealer_id = #{dealerId}
+				AND acc.user_id = info.user_id
+				)
+			</if>
+		   </where>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from sys_levelapply 
+		<where>
+		   <if test="username !=null and username.trim() != '' ">
+		        and `loginCode` like concat('%',#{username},'%')
+		   </if>
+		   <if test="level !=null and level.trim() != '' ">
+		          and targetLevelCode=#{level}
+		   </if>
+		   <if test="status !=null and status.trim() != '' ">
+		          and status=#{status}
+		   </if>
+			<if test="dealerId != null and dealerId != '' ">
+				logincode IN (
+				SELECT
+				login_code
+				FROM
+				bm_user_infoBrief info,
+				bm_user_account acc
+				WHERE
+				acc.dealer_id = #{dealerId}
+				AND acc.user_id = info.user_id
+				)
+			</if>
+		  </where>
+	</select>
+	 
+	<insert id="save" parameterType="com.dms.api.modules.entity.reserve.level.SysLevelapplyEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into sys_levelapply
+		(
+			`loginCode`, 
+			`preLevelCode`, 
+			`targetLevelCode`, 
+			`status`, 
+			`createTime`, 
+			`verifyTime`, 
+			`updateTime`, 
+			`operator`, 
+			`remark`
+		)
+		values
+		(
+			#{logincode}, 
+			#{prelevelcode}, 
+			#{targetlevelcode}, 
+			#{status}, 
+			#{createtime}, 
+			#{verifytime}, 
+			#{updatetime}, 
+			#{operator}, 
+			#{remark}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.dms.api.modules.entity.reserve.level.SysLevelapplyEntity">
+		update sys_levelapply 
+		<set>
+			<if test="logincode != null">`loginCode` = #{logincode}, </if>
+			<if test="prelevelcode != null">`preLevelCode` = #{prelevelcode}, </if>
+			<if test="targetlevelcode != null">`targetLevelCode` = #{targetlevelcode}, </if>
+			<if test="status != null">`status` = #{status}, </if>
+			<if test="createtime != null">`createTime` = #{createtime}, </if>
+			<if test="verifytime != null">`verifyTime` = #{verifytime}, </if>
+			<if test="updatetime != null">`updateTime` = #{updatetime}, </if>
+			<if test="operator != null">`operator` = #{operator}, </if>
+			<if test="remark != null">`remark` = #{remark}</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		delete from sys_levelapply where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		delete from sys_levelapply where id in 
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

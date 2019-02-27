@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.sys.config.SysConfigDao">
+
+	<select id="queryObject" resultType="com.dms.api.modules.entity.sys.config.SysConfigEntity">
+		select * from sys_config
+		where id = #{id}
+	</select>
+
+	<select id="queryList" parameterType="map"
+		resultType="com.dms.api.modules.entity.sys.config.SysConfigEntity">
+		select s.id,s.`key`,s.`value`,s.`status`,s.remark,s.pid,(select s1.value from sys_config s1 where s1.id=s.pid) as pvalue from sys_config s where s.status = 1
+		<if test="key != null and key.trim() != ''">
+			and `key` like concat('%',#{key},'%')
+		</if>
+		<choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by pid desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+
+	<select id="queryTotal" parameterType="map" resultType="int">
+		select count(*) from sys_config where status = 1
+		<if test="key != null and key.trim() != ''">
+			and `key` like concat('%',#{key},'%')
+		</if>
+	</select>
+
+	<insert id="save" parameterType="com.dms.api.modules.entity.sys.config.SysConfigEntity">
+		insert into sys_config(`key`,
+		`value`, remark,pid)
+		values(#{key},#{value},#{remark},#{pid})
+	</insert>
+
+	<update id="update" parameterType="com.dms.api.modules.entity.sys.config.SysConfigEntity">
+		update sys_config set `key` =
+		#{key}, `value` = #{value}, remark = #{remark},pid =#{pid}
+		where id = #{id}
+	</update>
+
+	<!-- 根据key，更新value -->
+	<update id="updateValueByKey" parameterType="map">
+		update sys_config
+		set `value` = #{value} where `key` = #{key}
+	</update>
+
+	<!-- 根据key，查询value -->
+	<select id="queryByKey" parameterType="string"
+		resultType="com.dms.api.modules.entity.sys.config.SysConfigEntity">
+		select * from sys_config where `key` = #{key}
+	</select>
+
+	<delete id="deleteBatch" parameterType="int">
+		delete from sys_config where id in
+		<foreach item="id" collection="array" open="(" separator=","
+			close=")">
+			#{id}
+		</foreach>
+	</delete>
+	
+	<select id="listPid" resultType="com.dms.api.modules.entity.sys.config.SysConfigEntity">
+	     select * from sys_config where pid=-1 and status = 1
+	</select>
+
+</mapper>

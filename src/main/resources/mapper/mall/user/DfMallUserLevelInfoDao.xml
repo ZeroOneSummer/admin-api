@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.mall.user.DfMallUserLevelInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="dfMallUserLevelInfoMap" type="com.dms.api.modules.entity.mall.user.DfMallUserLevelInfoEntity">
+        <result property="id" column="id"/>
+        <result property="ulId" column="levelCode"/>
+        <result property="ulLevelName" column="levelName"/>
+        <result property="ulMoneyRequire" column="moneyRequire"/>
+        <result property="ulHoldOrderRequire" column="holdOrderRequire"/>
+        <result property="ulMaxOrderAu" column="maxOrderAu"/>
+        <result property="ulMaxOrderAg" column="maxOrderAg"/>
+        <result property="ulMaxOneAu" column="maxOneAu"/>
+        <result property="ulMaxOneAg" column="maxOneAg"/>
+        <result property="gmtCreate" column="createTime"/>
+        <result property="gmtModified" column="updateTime"/>
+        <result property="remarks" column="remarks"/>
+    </resultMap>
+
+	<select id="queryObject" resultMap="dfMallUserLevelInfoMap">
+		select * from sys_levelinfo where id = #{value}
+	</select>
+
+	<select id="queryList" resultMap="dfMallUserLevelInfoMap">
+		select
+			info.*
+		from
+			sys_levelinfo info
+		<if test="dealerId != null and dealerId != '' ">
+			,df_mall_user_info uinfo
+			WHERE info.levelCode = uinfo.u_level_id
+			AND uinfo.u_user_logincode IN (
+			SELECT
+			login_code
+			FROM
+			bm_user_infoBrief info,
+			bm_user_account acc
+			WHERE
+			acc.dealer_id = #{dealerId}
+			AND acc.user_id = info.user_id
+			)
+		</if>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by info.id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from sys_levelinfo info
+		<if test="dealerId != null and dealerId != '' ">
+			,df_mall_user_info uinfo
+			WHERE info.levelCode = uinfo.u_level_id
+			AND uinfo.u_user_logincode IN (
+				SELECT
+				login_code
+				FROM
+				bm_user_infoBrief info,
+				bm_user_account acc
+				WHERE
+				acc.dealer_id = #{dealerId}
+				AND acc.user_id = info.user_id
+			)
+		</if>
+	</select>
+	 
+	<insert id="save" parameterType="com.dms.api.modules.entity.mall.user.DfMallUserLevelInfoEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into sys_levelinfo
+		(
+			`id`,
+			`levelName`,
+			`moneyRequire`,
+			`holdOrderRequire`,
+			`maxOrderAu`,
+			`maxOrderAg`,
+			`maxOneAu`,
+			`maxOneAg`,
+			`createTime`,
+			`updateTime`,
+			`remarks`
+		)
+		values
+		(
+			#{ulId}, 
+			#{ulLevelName}, 
+			#{ulMoneyRequire}, 
+			#{ulHoldOrderRequire}, 
+			#{ulMaxOrderAu}, 
+			#{ulMaxOrderAg}, 
+			#{ulMaxOneAu}, 
+			#{ulMaxOneAg}, 
+			#{gmtCreate}, 
+			#{gmtModified}, 
+			#{remarks}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.dms.api.modules.entity.mall.user.DfMallUserLevelInfoEntity">
+		update sys_levelinfo
+		<set>
+			<if test="ulId != null">`id` = #{ulId}, </if>
+			<if test="ulLevelName != null">`levelName` = #{ulLevelName}, </if>
+			<if test="ulMoneyRequire != null">`moneyRequire` = #{ulMoneyRequire}, </if>
+			<if test="ulHoldOrderRequire != null">`holdOrderRequire` = #{ulHoldOrderRequire}, </if>
+			<if test="ulMaxOrderAu != null">`maxOrderAu` = #{ulMaxOrderAu}, </if>
+			<if test="ulMaxOrderAg != null">`maxOrderAg` = #{ulMaxOrderAg}, </if>
+			<if test="ulMaxOneAu != null">`maxOneAu` = #{ulMaxOneAu}, </if>
+			<if test="ulMaxOneAg != null">`maxOneAg` = #{ulMaxOneAg}, </if>
+			<if test="gmtCreate != null">`createTime` = #{gmtCreate}, </if>
+			<if test="gmtModified != null">`updateTime` = #{gmtModified}, </if>
+			<if test="remarks != null">`remarks` = #{remarks}</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		delete from sys_levelinfo where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		delete from sys_levelinfo where id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

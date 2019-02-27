@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.report.nightorder.NightOrderDao">
+
+  <select id="queryList" resultType="com.dms.api.modules.entity.report.nightorder.NightOrderEntity">
+      SELECT
+        <if test="orderFlag == 'true'">
+            servicenum as serviceNum,
+        </if>
+        weeks,
+        sum((order_quantity * contract_size) * 0.001 * (
+            CASE
+            WHEN symbol_id = 2
+            THEN (select IF(`value` &lt;> '' and `value` is not null, `value`, 66) from sys_config where `key` = 'AU_PI')
+            ELSE (select IF(`value` &lt;> '' and `value` is not null, `value`, 1.8) from sys_config where `key` = 'AG_PI') END
+            ) * DATEDIFF(order_date_out,order_date_in) * 1.13
+        ) AS dim,
+        begin_date,
+        end_date
+      FROM
+        view_pass_night_order
+      WHERE
+        1 = 1
+        <if test="startTime != null and startTime != ''">
+            AND weeks >= YEARWEEK(#{startTime}, 6)
+        </if>
+        <if test="endTime != null and endTime != ''">
+            AND weeks &lt;= YEARWEEK(#{endTime}, 6)
+        </if>
+        <if test="weeks != null and weeks != ''">
+            AND weeks = #{weeks}
+        </if>
+      GROUP BY
+        weeks
+        <if test="orderFlag == 'true'">
+           ,servicenum
+        </if>
+      <choose>
+          <when test="sidx != null and sidx.trim() != ''">
+              order by ${sidx} ${order}
+          </when>
+          <otherwise>
+              order by weeks
+          </otherwise>
+      </choose>
+  </select>
+
+</mapper>

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.report.couponsReport.CouponAmlogDao">
+
+  <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.report.couponsReport.CouponAmlog">
+    <id column="id" property="id" />
+    <result column="am_id" property="amId" />
+    <result column="trading_day" property="tradingDay" />
+    <result column="coupon_sn" property="couponSn" />
+    <result column="am_change" property="amChange" />
+    <result column="type" property="type" />
+    <result column="des_aft_drawable" property="desAftDrawable" />
+    <result column="des_bef_drawable" property="desBefDrawable" />
+    <result column="src_aft_drawable"  property="srcAftDrawable" />
+    <result column="src_bef_drawable" property="srcBefDrawable" />
+    <result column="des_accid" property="desAccId" />
+    <result column="src_accid"  property="srcAccId" />
+    <result column="create_time"  property="createTime" />
+    <result column="complete_date" property="completeDate" />
+    <result column="rmk1" property="rmk1" />
+    <result column="rmk2" property="rmk2" />
+    <result column="status" property="status" />
+    <result column="remark" property="remark" />
+
+    <result column="dealer_code" property="dealerCode" />
+    <result column="coupon_no" property="couponNo" />
+  </resultMap>
+
+  <select id="queryList" resultMap="BaseResultMap">
+    select * from(
+    <if test="type != 'C001'">
+    SELECT
+    log.trading_day,
+    info.dealer_code,
+    d.coupon_no,
+    log.am_change,
+    log.type,
+    log.create_time,
+    log.complete_date
+    FROM
+    coupon_amountlog log
+    left join coupon_detail d on LEFT (log.coupon_sn, 18) = d.coupon_no
+    left join bm_dealer_info info on d.dealer_id = info.dealer_id
+    WHERE
+    log.status = 1
+        <if test="dealerId != null and dealerId != ''">
+          AND info.dealer_id = #{dealerId}
+        </if>
+        <if test="dealerCode != null and dealerCode != ''">
+          AND info.dealer_code = #{dealerCode}
+        </if>
+        <if test="couponNo != null and couponNo != ''">
+          AND d.coupon_no = #{couponNo}
+        </if>
+        <if test="startTime != null">
+          AND log.trading_day >= #{startTime}
+        </if>
+        <if test="endTime != null">
+          AND log.trading_day &lt;= #{endTime}
+        </if>
+
+        <choose>
+          <when test="type != null and type != ''">
+            and log.type in (#{type})
+          </when>
+          <otherwise>
+            and log.type in ('C002','C003','C004','C005')
+          </otherwise>
+        </choose>
+        <if test="type == '' or type == 'C001'">
+          UNION ALL
+        </if>
+    </if>
+
+
+    <if test="type == '' or type == 'C001'">
+      SELECT
+        log.trading_day,
+        info.dealer_code,
+        '' as coupon_no,
+        log.am_change,
+        log.type,
+        log.create_time,
+        log.complete_date
+      FROM
+        coupon_amountlog log
+      left join bm_user_account acc on log.src_accid = acc.acc_id
+      left join bm_dealer_info info on acc.dealer_id = info.dealer_id
+      WHERE
+        log.status = 1
+        and log.type in ('C001')
+        <if test="dealerId != null and dealerId != ''">
+          AND info.dealer_id = #{dealerId}
+        </if>
+        <if test="dealerCode != null and dealerCode != ''">
+          AND info.dealer_code = #{dealerCode}
+        </if>
+        <if test="couponNo != null and couponNo != ''">
+          AND LEFT (log.coupon_sn, 18) = #{couponNo}
+        </if>
+        <if test="startTime != null">
+          AND log.trading_day >= #{startTime}
+        </if>
+        <if test="endTime != null">
+          AND log.trading_day &lt;= #{endTime}
+        </if>
+    </if>
+    ) b
+      <choose>
+        <when test="sidx != null and sidx.trim() != ''">
+          order by ${sidx} ${order}
+        </when>
+        <otherwise>
+          order by b.trading_day desc
+        </otherwise>
+      </choose>
+      <if test="offset != null and limit != null">
+        limit #{offset}, #{limit}
+      </if>
+  </select>
+
+
+  <select id="queryTotal" resultType="int">
+      select
+        <if test="type != 'C001'">
+        (SELECT
+            count(*)
+          FROM
+          coupon_amountlog log
+          left join coupon_detail d on LEFT (log.coupon_sn, 18) = d.coupon_no
+          left join bm_dealer_info info on d.dealer_id = info.dealer_id
+          WHERE
+          log.status = 1
+          <if test="dealerId != null and dealerId != ''">
+            AND info.dealer_id = #{dealerId}
+          </if>
+          <if test="dealerCode != null and dealerCode != ''">
+            AND info.dealer_code = #{dealerCode}
+          </if>
+          <if test="couponNo != null and couponNo != ''">
+            AND d.coupon_no = #{couponNo}
+          </if>
+          <if test="startTime != null">
+            AND log.trading_day >= #{startTime}
+          </if>
+          <if test="endTime != null">
+            AND log.trading_day &lt;= #{endTime}
+          </if>
+
+          <choose>
+            <when test="type != null and type != ''">
+              and log.type in (#{type})
+            </when>
+            <otherwise>
+              and log.type in ('C002','C003','C004','C005')
+            </otherwise>
+          </choose>
+        )
+        </if>
+
+        <if test="type == '' or type == 'C001'">
+          +
+          (SELECT
+            count(*)
+          FROM
+          coupon_amountlog log
+          left join bm_user_account acc on log.src_accid = acc.acc_id
+          left join bm_dealer_info info on acc.dealer_id = info.dealer_id
+          WHERE
+          log.status = 1
+          and log.type in ('C001')
+          <if test="dealerId != null and dealerId != ''">
+            AND info.dealer_id = #{dealerId}
+          </if>
+          <if test="dealerCode != null and dealerCode != ''">
+            AND info.dealer_code = #{dealerCode}
+          </if>
+          <if test="couponNo != null and couponNo != ''">
+            AND LEFT (log.coupon_sn, 18) = #{couponNo}
+          </if>
+          <if test="startTime != null">
+            AND log.trading_day >= #{startTime}
+          </if>
+          <if test="endTime != null">
+            AND log.trading_day &lt;= #{endTime}
+          </if>
+          )
+        </if>
+
+  </select>
+
+</mapper>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.sys.user.SysUserAuditDao">
+
+    <select id="queryList" resultType="com.dms.api.modules.entity.sys.user.SysUserAudit">
+        select
+            user_id as userId,
+            username as userName,
+            email,
+            mobile,
+            status,
+            create_time as createTime,
+            user_type as userType,
+            auditor_name as auditorName,
+            group_id as groupId
+        from
+            sys_user
+        <where>
+            <if test="userName != null and userName.trim() != '' ">
+                and username like concat('%',#{userName},'%')
+            </if>
+            <if test="mobile != null and mobile.trim() != '' ">
+                and mobile like concat('%',#{mobile},'%')
+            </if>
+            <if test="auditorName != null and auditorName.trim() != '' ">
+                and auditor_name like concat('%',#{auditorName},'%')
+            </if>
+        </where>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+            <otherwise>
+                order by createTime desc
+            </otherwise>
+        </choose>
+    </select>
+    
+    <update id="update" parameterType="com.dms.api.modules.entity.sys.user.SysUserAudit">
+        update
+          sys_user
+        set
+          auditor_name = #{auditorName},
+          group_id = #{groupId}
+        where
+          user_id = #{userId}
+    </update>
+
+    <select id="queryObject" resultType="com.dms.api.modules.entity.sys.user.SysUserAudit">
+        select
+            user_id as userId,
+            username as userName,
+            dealer_id as dealerId,
+            email,
+            mobile,
+            status,
+            create_time as createTime,
+            user_type as userType,
+            auditor_name as auditorName,
+            group_id as groupId
+        from
+            sys_user
+        where
+            user_id = #{id}
+    </select>
+
+    <select id="queryPayId" resultType="java.lang.String">
+        SELECT
+            pay_id
+        FROM
+            bm_user_infoBrief
+        WHERE
+            login_code = #{loginCode}
+    </select>
+
+    <select id="queryMallUserInfo" resultType="java.util.Map">
+        SELECT
+            brf.login_code as loginCode,
+            bu.user_id as userId,
+            brf.user_name as userName,
+            brf.base_info_mobilephone as phone,
+            bu.am_margin_remain as balance
+        FROM
+            bm_user_money bu,
+            bm_user_infoBrief brf
+        WHERE
+            bu.user_id = brf.user_id AND
+            brf.login_code = #{loginCode}
+    </select>
+
+</mapper>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.report.bean.BountyDailySettlementDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.dms.api.modules.entity.report.bean.BountyDailySettlementEntity" id="bountyDailySettlementMap">
+        <result property="id" column="id"/>
+        <result property="dealerId" column="dealer_id"/>
+        <result property="orgId" column="org_id"/>
+        <result property="tradingDay" column="trading_day"/>
+        <result property="total" column="total"/>
+        <result property="income" column="income"/>
+        <result property="consume" column="consume"/>
+        <result property="invalid" column="invalid"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.dms.api.modules.entity.report.bean.BountyDailySettlementEntity">
+		select * from bounty_daily_settlement where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.dms.api.modules.entity.report.bean.BountyDailySettlementEntity">
+		select id,
+		<if test="dealerId != null and dealerId != ''">
+			dealer_id,
+		</if>
+		<if test="orgId != null and orgId != ''">
+			org_id,
+		</if>
+		trading_day,sum(total) total, sum(income) income,sum(consume) consume, sum(invalid) invalid from bounty_daily_settlement
+		where 1 = 1
+		<if test="dealerId != null and dealerId != ''">
+			AND `dealer_id` = #{dealerId}
+		</if>
+		<if test="orgId != null and orgId != ''">
+			AND `org_id` = #{orgId}
+		</if>
+		<if test="list != null and list.size>0">
+			AND trading_day in
+			<foreach item="date" collection="list" open="(" separator="," close=")">
+				#{date}
+			</foreach>
+		</if>
+		GROUP BY
+		trading_day,
+		<if test="dealerId != null and dealerId != ''">
+			dealer_id
+		</if>
+		<if test="orgId != null and orgId != ''">
+			org_id
+		</if>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by trading_day desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from bounty_daily_settlement 
+	</select>
+	 
+	<insert id="save" parameterType="com.dms.api.modules.entity.report.bean.BountyDailySettlementEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into bounty_daily_settlement
+		(
+			`dealer_id`, 
+			`org_id`, 
+			`trading_day`, 
+			`total`, 
+			`income`, 
+			`consume`, 
+			`invalid`
+		)
+		values
+		(
+			#{dealerId}, 
+			#{orgId}, 
+			#{tradingDay}, 
+			#{total}, 
+			#{income}, 
+			#{consume}, 
+			#{invalid}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.dms.api.modules.entity.report.bean.BountyDailySettlementEntity">
+		update bounty_daily_settlement 
+		<set>
+			<if test="dealerId != null">`dealer_id` = #{dealerId}, </if>
+			<if test="orgId != null">`org_id` = #{orgId}, </if>
+			<if test="tradingDay != null">`trading_day` = #{tradingDay}, </if>
+			<if test="total != null">`total` = #{total}, </if>
+			<if test="income != null">`income` = #{income}, </if>
+			<if test="consume != null">`consume` = #{consume}, </if>
+			<if test="invalid != null">`invalid` = #{invalid}</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		delete from bounty_daily_settlement where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		delete from bounty_daily_settlement where id in 
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+	<insert id="insertBatch" parameterType="java.util.List">
+		insert into bounty_daily_settlement(dealer_id, org_id,trading_day,
+		total, income, consume,invalid)
+		values
+		<foreach collection="list" item="entity" index="index" separator=",">
+			(#{entity.dealerId},#{entity.orgId},#{entity.tradingDay},
+			#{entity.total},#{entity.income},#{entity.consume},#{entity.invalid})
+		</foreach>
+	</insert>
+
+</mapper>

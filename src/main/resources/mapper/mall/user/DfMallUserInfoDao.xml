@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dms.api.modules.dao.mall.user.DfMallUserInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.dms.api.modules.entity.mall.user.DfMallUserInfoEntity" id="dfMallUserInfoMap">
+        <result property="id" column="id"/>
+        <result property="uUserLogincode" column="u_user_logincode"/>
+        <result property="uLevelId" column="u_level_id"/>
+        <result property="uIsSerialcode" column="u_is_serialcode"/>
+        <result property="uIsRisk" column="u_is_risk"/>
+        <result property="uIsAuth" column="u_is_auth"/>
+		<result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+        <result property="remarks" column="remarks"/>
+        <result property="checkStatus" column="check_status"/>
+    </resultMap>
+
+	<!-- 客户信息报表实体 -->
+	<resultMap type="com.dms.api.modules.entity.mall.user.UserInfoEntity" id="userInfo_report">
+		<result property="loginCode" column="loginCode"/>
+		<result property="accStatus" column="accStatus"/>
+		<result property="userName" column="userName"/>
+		<result property="phone" column="phone"/>
+		<result property="serviceNum" column="serviceNum"/>
+		<result property="bmOrgNum" column="bmOrgNum"/>
+		<result property="amMarginRemain" column="amMarginRemain"/>
+		<result property="intoTime" column="intoTime"/>
+		<result property="levelNum" column="levelNum"/>
+	</resultMap>
+
+	<select id="queryObject" resultType="com.dms.api.modules.entity.mall.user.DfMallUserInfoEntity">
+		select * from df_mall_user_info where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.dms.api.modules.entity.mall.user.DfMallUserInfoEntity">
+		select * from df_mall_user_info
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+
+	<select id="getUserInfo" parameterType="com.dms.api.modules.entity.reserve.level.SysLevelapplyEntity" resultType="com.dms.api.modules.entity.mall.user.DfMallUserInfoEntity">
+	     select * from df_mall_user_info where u_user_logincode=#{logincode}
+	</select>
+
+	<update id="updateLevel" parameterType="com.dms.api.modules.entity.reserve.level.SysLevelapplyEntity">
+	     update df_mall_user_info d set d.u_level_id=#{targetlevelcode} where u_user_logincode=#{logincode}
+	</update>
+
+	<select id="getUserAndLevel" resultType="map">
+		<!-- select * from df_mall_user_info -->
+		SELECT df.*,u.user_name,l.levelName FROM df_mall_user_info df
+		LEFT JOIN sys_levelinfo l on df.u_level_id=l.levelCode
+		LEFT JOIN bm_user_infoBrief u on df.u_user_logincode=u.login_code
+		<where>
+		<if test="username != null and username.trim() != ''">
+				and u.user_name like concat('%',#{username},'%')
+			</if>
+			<if test="dealerId != null and dealerId != '' ">
+				df.u_user_logincode IN (
+				SELECT
+				login_code
+				FROM
+				bm_user_infoBrief info,
+				bm_user_account acc
+				WHERE
+				acc.dealer_id = #{dealerId}
+				AND acc.user_id = info.user_id
+				)
+			</if>
+		</where>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+
+ 	<select id="queryTotal" resultType="int">
+		<!-- select count(*) from df_mall_user_info  -->
+		SELECT count(*) FROM df_mall_user_info df LEFT JOIN sys_levelinfo l on df.u_level_id=l.levelCode LEFT JOIN bm_user_infoBrief u on df.u_user_logincode=u.login_code
+
+		<where>
+			<if test="username != null and username.trim() != ''">
+				and  u.user_name like concat('%',#{username},'%')
+			</if>
+            <if test="dealerId != null and dealerId != '' ">
+                df.u_user_logincode IN (
+                SELECT
+                login_code
+                FROM
+                bm_user_infoBrief info,
+                bm_user_account acc
+                WHERE
+                acc.dealer_id = #{dealerId}
+                AND acc.user_id = info.user_id
+                )
+            </if>
+		</where>
+	</select>
+
+	<insert id="save" parameterType="com.dms.api.modules.entity.mall.user.DfMallUserInfoEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into df_mall_user_info
+		(
+			`u_user_logincode`, 
+			`u_level_id`, 
+			`u_is_serialcode`, 
+			`u_is_risk`, 
+			`u_is_auth`, 
+			`gmt_create`, 
+			`gmt_modified`, 
+			`remarks`, 
+			`check_status`
+		)
+		values
+		(
+			#{uUserLogincode}, 
+			#{uLevelId}, 
+			#{uIsSerialcode}, 
+			#{uIsRisk}, 
+			#{uIsAuth}, 
+			#{gmtCreate}, 
+			#{gmtModified}, 
+			#{remarks}, 
+			#{checkStatus}
+		)
+	</insert>
+
+	<update id="update" parameterType="com.dms.api.modules.entity.mall.user.DfMallUserInfoEntity">
+		update df_mall_user_info
+		<set>
+			<if test="uUserLogincode != null">`u_user_logincode` = #{uUserLogincode}, </if>
+			<if test="uLevelId != null">`u_level_id` = #{uLevelId}, </if>
+			<if test="uIsSerialcode != null">`u_is_serialcode` = #{uIsSerialcode}, </if>
+			<if test="uIsRisk != null">`u_is_risk` = #{uIsRisk}, </if>
+			<if test="uIsAuth != null">`u_is_auth` = #{uIsAuth}, </if>
+			<if test="gmtCreate != null">`gmt_create` = #{gmtCreate}, </if>
+			<if test="gmtModified != null">`gmt_modified` = #{gmtModified}, </if>
+			<if test="remarks != null">`remarks` = #{remarks}, </if>
+			<if test="checkStatus != null">`check_status` = #{checkStatus}</if>
+		</set>
+		where id = #{id}
+	</update>
+
+	<delete id="delete">
+		delete from df_mall_user_info where id = #{value}
+	</delete>
+
+	<delete id="deleteBatch">
+		delete from df_mall_user_info where id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+	<select id="queryUserInfoAndLevel" resultType="map" parameterType="map">
+		select
+			u.u_user_logincode loginCode,
+			u.u_is_serialcode uIsRisk,
+			u.u_is_serialcode uIsSerialCode,
+			u.u_is_auth uIsAuth,
+			sl.levelcode levelcode,
+			sl.levelname ulLevelName
+		from
+			df_mall_user_info u ,sys_levelinfo sl
+		where
+			u.u_level_id = sl.levelcode
+
+			<if test="loginCode != null">
+				and u.u_user_logincode = #{loginCode}
+			</if>
+
+	</select>
+
+	<select id="queryuUserInfoList" resultMap="userInfo_report">
+		select
+			vs.login_code as 'loginCode',
+			vs.acc_status as 'accStatus',
+			vs.user_name as 'userName',
+			vs.phone as 'phone',
+			vs.servicenum as 'serviceNum',
+			vs.bm_org_num as 'bmOrgNum',
+			bc.am_margin_remain as 'amMarginRemain',
+			vs.into_time as 'intoTime',
+			sl.levelName as 'levelNum'
+		from
+			view_bm_users vs
+			LEFT join bm_user_money bc on bc.acc_id= vs.acc_id
+			LEFT JOIN df_mall_user_info bmu on bmu.u_user_logincode = vs.login_code
+			LEFT join sys_levelinfo sl on bmu.u_level_id = sl.levelCode
+		<trim prefix="WHERE" prefixOverrides="AND">
+
+			<if test="userName != null and userName.trim() != '' ">
+				vs.user_name = #{userName}
+			</if>
+
+			<if test="phone != null and phone.trim() != ''">
+				AND vs.phone=#{phone}
+			</if>
+
+			<if test="serviceNum != null and serviceNum.trim() != ''">
+				AND vs.servicenum=#{serviceNum}
+			</if>
+
+			<if test="bmOrgNum != null and bmOrgNum.trim() != ''">
+				AND vs.bm_org_num=#{bmOrgNum}
+			</if>
+
+			<if test="levelName != null and levelName.trim() != ''">
+				AND sl.levelName=#{levelName}
+			</if>
+
+			<if test="startTime != null and startTime.trim() != '' ">
+				AND date_format(vs.into_time ,'%Y-%m-%d') >=#{startTime}
+			</if>
+
+			<if test="endTime != null and endTime.trim() != '' ">
+				AND date_format(vs.into_time ,'%Y-%m-%d') &lt;=#{endTime}
+			</if>
+
+		</trim>
+
+		order by vs.into_time desc
+
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+
+	<select id="queryuUserInfoListTotal" resultType="int">
+		select
+			COUNT(*)
+		from
+			view_bm_users vs
+		LEFT join bm_user_money bc on bc.acc_id= vs.acc_id
+		LEFT JOIN df_mall_user_info bmu on bmu.u_user_logincode = vs.login_code
+		LEFT join sys_levelinfo sl on bmu.u_level_id = sl.levelCode
+
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="userName != null and userName.trim() != '' ">
+				vs.user_name = #{userName}
+			</if>
+
+			<if test="phone != null and phone.trim() != ''">
+				AND vs.phone=#{phone}
+			</if>
+
+			<if test="serviceNum != null and serviceNum.trim() != ''">
+				AND vs.servicenum=#{serviceNum}
+			</if>
+
+			<if test="bmOrgNum != null and bmOrgNum.trim() != ''">
+				AND vs.bm_org_num=#{bmOrgNum}
+			</if>
+
+			<if test="levelName != null and levelName.trim() != ''">
+				AND sl.levelName=#{levelName}
+			</if>
+
+			<if test="startTime != null and startTime.trim() != '' ">
+				AND date_format(vs.into_time ,'%Y-%m-%d') >=#{startTime}
+			</if>
+
+			<if test="endTime != null and endTime.trim() != '' ">
+				AND date_format(vs.into_time ,'%Y-%m-%d') &lt;=#{endTime}
+			</if>
+		</trim>
+	</select>
+
+</mapper>

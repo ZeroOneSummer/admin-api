@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.reserve.coupons.CouponCheckDao">
+
+    <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.reserve.coupons.CouponCheck">
+      <id column="id" jdbcType="INTEGER" property="id" />
+      <result column="coupon_no" jdbcType="VARCHAR" property="couponNo" />
+      <result column="status" jdbcType="VARCHAR" property="status" />
+      <result column="rmk" jdbcType="VARCHAR" property="rmk" />
+      <result column="create_time" jdbcType="VARCHAR" property="createTime" />
+      <result column="update_time" jdbcType="VARCHAR" property="updateTime" />
+      <result column="update_user" jdbcType="VARCHAR" property="updateUser" />
+    </resultMap>
+
+    <select id="queryDetail" resultType="com.dms.api.modules.entity.reserve.coupons.CouponDetail">
+          select
+            bdi.dealer_name,
+            d.*
+          from
+            coupon_detail d,
+            bm_dealer_info bdi
+          where
+            d.dealer_id = bdi.dealer_id
+            and d.coupon_no = #{couponNo}
+    </select>
+
+    <select id="queryList" resultType="com.dms.api.modules.entity.reserve.coupons.CouponCheck">
+
+        SELECT
+            r.id,
+            r.coupon_no,
+            r.STATUS,
+            r.rmk,
+            r.create_time,
+            r.update_time,
+            r.update_user
+        FROM
+            coupon_verify_record r,
+            coupon_detail d
+        <where>
+           r.coupon_no = d.coupon_no
+          <if test="dealerId != null and dealerId != '' ">
+            and d.dealer_id = #{dealerId}
+          </if>
+          <if test="couponNo != null and couponNo != '' ">
+            and r.coupon_no = #{couponNo}
+          </if>
+          <if test="status != null and status != '' ">
+            and r.status = #{status}
+          </if>
+          <if test="startTime != null">
+            and r.create_time >= #{startTime}
+          </if>
+          <if test="endTime != null">
+            and r.create_time &lt;= #{endTime}
+          </if>
+        </where>
+        <choose>
+          <when test="sidx != null and sidx.trim() != ''">
+            order by ${sidx} ${order}
+          </when>
+          <otherwise>
+            order by r.create_time desc
+          </otherwise>
+        </choose>
+        <if test="offset != null and limit != null">
+          limit #{offset}, #{limit}
+        </if>
+
+    </select>
+
+    <select id="queryTotal" resultType="int">
+
+        SELECT
+            count(*)
+        FROM
+            coupon_verify_record r,
+            coupon_detail d
+        <where>
+            r.coupon_no = d.coupon_no
+            <if test="dealerId != null and dealerId != '' ">
+                and d.dealer_id = #{dealerId}
+            </if>
+            <if test="couponNo != null and couponNo != '' ">
+                and r.coupon_no = #{couponNo}
+            </if>
+            <if test="status != null and status != '' ">
+                and r.status = #{status}
+            </if>
+            <if test="startTime != null">
+                and r.create_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and r.create_time &lt;= #{endTime}
+            </if>
+        </where>
+
+    </select>
+
+
+    <update id="update" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponCheck">
+        update
+          coupon_verify_record
+        <set>
+          <if test="status != null">`status` = #{status}, </if>
+          <if test="rmk != null">`rmk` = #{rmk}, </if>
+          <if test="updateTime != null">`update_time` = #{updateTime}, </if>
+          <if test="updateUser != null">`update_user` = #{updateUser} </if>
+        </set>
+        where
+          id = #{id}
+    </update>
+
+    <select id="queryAccId" resultType="map">
+        select
+            d.id,
+            d.total_price as amChange,
+            d.dealer_id as dealerId,
+            info.login_code as loginCode,
+            acc.acc_id as srcAccId,
+            acc.user_id as userId
+        from   coupon_detail d,
+               bm_user_account acc,
+               bm_user_infoBrief info
+           where
+             d.dealer_id=acc.dealer_id
+             and acc.user_id = info.user_id
+             and acc.acc_type='5'
+             and d.coupon_no = #{couponNo} limit 1
+    </select>
+
+    <insert id="addCouponVerifyRecord" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponCheck">
+        insert into
+          coupon_verify_record(coupon_no,status)
+        values(#{couponNo},#{status})
+    </insert>
+
+</mapper>

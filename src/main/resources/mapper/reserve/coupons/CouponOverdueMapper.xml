@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.reserve.coupons.CouponOverdueDao">
+
+    <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.reserve.coupons.CouponOverdue">
+      <id column="id" jdbcType="INTEGER" property="id" />
+      <result column="coupon_sn" jdbcType="VARCHAR" property="couponSn" />
+      <result column="overdue_money" jdbcType="DECIMAL" property="overdueMoney" />
+      <result column="cre_date" jdbcType="TIMESTAMP" property="creDate" />
+      <result column="has_transfer" jdbcType="VARCHAR" property="hasTransfer" />
+      <result column="type" jdbcType="VARCHAR" property="type" />
+      <result column="transfer_date" jdbcType="TIMESTAMP" property="transferDate" />
+    </resultMap>
+
+    <insert id="saveBatch" parameterType="java.util.List">
+          insert into coupon_overdue
+          (
+            `coupon_sn`,
+            `overdue_money`,
+            `cre_date`,
+            `has_transfer`,
+            `type`,
+            `transfer_date`
+          )
+          values
+        <foreach collection="list" item="item" separator=",">
+          (
+            #{item.couponSn},
+            #{item.overdueMoney},
+            #{item.creDate},
+            #{item.hasTransfer},
+            #{item.type},
+            #{item.transferDate}
+          )
+        </foreach>
+      </insert>
+
+</mapper>

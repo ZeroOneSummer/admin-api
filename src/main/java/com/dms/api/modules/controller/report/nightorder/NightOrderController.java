@@ -1,0 +1,92 @@
+package com.dms.api.modules.controller.report.nightorder;
+
+import cn.afterturn.easypoi.excel.ExcelExportUtil;
+import cn.afterturn.easypoi.excel.entity.ExportParams;
+import com.dms.api.common.utils.PageUtils;
+import com.dms.api.common.utils.Query;
+import com.dms.api.common.utils.R;
+import com.dms.api.modules.base.AbstractController;
+import com.dms.api.modules.entity.report.couponsReport.CouponOrder;
+import com.dms.api.modules.entity.report.nightorder.NightOrderEntity;
+import com.dms.api.modules.service.report.nightorder.NightOrderService;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletResponse;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @author jp
+ * date 2019/01/10 10:25
+ * decription: 过夜单报表
+ */
+@RequestMapping("nightOrder")
+@RestController
+public class NightOrderController extends AbstractController {
+
+    @Autowired
+    NightOrderService nightOrderService;
+
+    @RequestMapping("/list")
+    @RequiresPermissions("nightOrder:list")
+    public R list(@RequestBody Map<String, Object> params) {
+        //查询列表数据
+        Query query = new Query(params);
+
+        int page = (int)query.get("page"); //页码
+        int limit = query.getLimit(); //页面容量
+        PageHelper.startPage(page, limit);
+        List<NightOrderEntity> list = nightOrderService.queryList(query);
+        PageInfo<NightOrderEntity> pageInfo = new PageInfo(list);
+        int total = (int) pageInfo.getTotal();
+
+        PageUtils pageUtil = new PageUtils(list, total, query);
+        return R.ok().put("page", pageUtil);
+    }
+
+    @RequestMapping("/download")
+    @RequiresPermissions("nightOrder:download")
+    public R download(@RequestParam Map<String, Object> params, HttpServletResponse response) throws Exception {
+        //获取查询
+        Query query = new Query(params);
+        if(query == null) query = new Query();
+
+        List<NightOrderEntity> list = nightOrderService.queryList(query);
+        PageInfo<CouponOrder> pageInfo = new PageInfo(list);
+        int total = (int) pageInfo.getTotal();
+
+        if (list == null){ list = new ArrayList<>(); }
+        PageUtils pageUtil = new PageUtils(list, total, query);
+
+        //报表参数对象
+        ExportParams exportParams = new ExportParams();
+        String[] exclu = {}; //忽略字段
+        //报表名称
+        String reportStr = "过夜单统计查询";
+        exportParams.setExclusions(exclu);
+
+        Workbook workbook = ExcelExportUtil.exportExcel(exportParams, NightOrderEntity.class, list);
+
+        response.setHeader("content-Type", "application/vnd.ms-excel");
+        response.setCharacterEncoding("utf-8");
+        // 下载文件的默认名称
+        String dataStr = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+
+        response.setHeader("Content-Disposition", "attachment;filename="+new String((dataStr + reportStr).getBytes("utf-8"), "iso8859-1")+".xls");
+        workbook.write(response.getOutputStream());
+
+        return R.ok().put("page", pageUtil);
+    }
+
+}

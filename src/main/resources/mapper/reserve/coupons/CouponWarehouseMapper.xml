@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.reserve.coupons.CouponWarehouseDao">
+
+    <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.reserve.coupons.CouponWarehouse">
+      <id column="id" jdbcType="INTEGER" property="id" />
+      <result column="coupon_sn" jdbcType="VARCHAR" property="couponSn" />
+      <result column="coupon_no" jdbcType="VARCHAR" property="couponNo" />
+      <result column="price" jdbcType="DECIMAL" property="price" />
+      <result column="coupon_pass" jdbcType="VARCHAR" property="couponPass" />
+      <result column="logincode" jdbcType="VARCHAR" property="logincode" />
+      <result column="use_status" jdbcType="VARCHAR" property="useStatus" />
+
+      <result column="use_time" jdbcType="TIMESTAMP" property="useTime" />
+    </resultMap>
+
+    <select id="queryObject" resultType="com.dms.api.modules.entity.reserve.coupons.CouponWarehouse">
+          select
+            *
+          from
+            coupon_warehouse
+          where
+            id = #{id}
+    </select>
+
+    <select id="queryList" resultType="com.dms.api.modules.entity.reserve.coupons.CouponWarehouse">
+        select
+          *
+        from
+          coupon_warehouse
+        <where>
+          <if test="couponNo != null and couponNo.trim() != '' ">
+            and coupon_no = #{couponNo}
+          </if>
+          <if test="price != null and price.trim() != '' ">
+            and price = #{price}
+          </if>
+          <if test="useStatus != null and useStatus.length > 0 ">
+            and use_status in
+            <foreach collection="useStatus" item="useStatu" open="(" separator="," close=")">
+                #{useStatu}
+            </foreach>
+          </if>
+        </where>
+        <choose>
+          <when test="sidx != null and sidx.trim() != ''">
+            order by ${sidx} ${order}
+          </when>
+          <otherwise>
+            order by id ASC
+          </otherwise>
+        </choose>
+        <if test="offset != null and limit != null">
+          limit #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="queryTotal" resultType="int">
+        select
+          count(*)
+        from
+          coupon_warehouse
+        <where>
+          <if test="couponNo != null and couponNo.trim() != '' ">
+            and coupon_no = #{couponNo}
+          </if>
+          <if test="price != null and price.trim() != '' ">
+            and price = #{price}
+          </if>
+          <if test="useStatus != null and useStatus.length > 0 ">
+            and use_status in
+            <foreach collection="useStatus" item="useStatu" open="(" separator="," close=")">
+                #{useStatu}
+            </foreach>
+          </if>
+        </where>
+    </select>
+
+    <insert id="saveList" parameterType="java.util.List">
+            insert into coupon_warehouse
+            (
+              `coupon_sn`,
+              `coupon_no`,
+              `price`,
+              `coupon_pass`,
+              `logincode`,
+              `use_status`,
+              `use_time`
+            )
+            values
+            <foreach collection="list" item="item" separator=",">
+                (#{item.couponSn},
+                #{item.couponNo},
+                #{item.price},
+                #{item.couponPass},
+                #{item.logincode},
+                #{item.useStatus},
+                #{item.useTime})
+            </foreach>
+    </insert>
+
+    <update id="update" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponWarehouse">
+        update coupon_warehouse
+        <set>
+          <if test="couponSn != null">`coupon_sn` = #{couponSn}, </if>
+          <if test="couponNo != null">`coupon_no` = #{couponNo}, </if>
+          <if test="price != null">`price` = #{price}, </if>
+          <if test="couponPass != null">`coupon_pass` = #{couponPass}, </if>
+          <if test="logincode != null">`logincode` = #{logincode}, </if>
+          <if test="useStatus != null">`use_status` = #{useStatus}, </if>
+          <if test="useTime != null">`use_time` = #{useTime}, </if>
+        </set>
+        where
+        id = #{id}
+    </update>
+
+    <update id="updateBatch">
+        update
+          coupon_warehouse
+        set
+          use_status = -1,
+          use_time = now()
+        where
+          use_status in(0) and
+          id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <delete id="delete">
+          delete from coupon_warehouse where id = #{id}
+      </delete>
+
+    <delete id="deleteBatch">
+        delete from coupon_warehouse where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+          #{id}
+        </foreach>
+    </delete>
+
+</mapper>

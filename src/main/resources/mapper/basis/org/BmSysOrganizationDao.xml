@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.basis.org.BmSysOrganizationDao">
+  <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.basis.org.BmSysOrganization">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="org_id" jdbcType="VARCHAR" property="orgId" />
+    <result column="org_code" jdbcType="VARCHAR" property="orgCode" />
+    <result column="org_name" jdbcType="VARCHAR" property="orgName" />
+    <result column="org_sequence" jdbcType="VARCHAR" property="orgSequence" />
+    <result column="dealer_id" jdbcType="VARCHAR" property="dealerId" />
+    <result column="broker_dealer_id" jdbcType="VARCHAR" property="brokerDealerId" />
+    <result column="base_info_i_d_card" jdbcType="VARCHAR" property="baseInfoIDCard" />
+    <result column="base_info_i_d_type" jdbcType="VARCHAR" property="baseInfoIDType" />
+    <result column="base_info_telephone" jdbcType="VARCHAR" property="baseInfoTelephone" />
+    <result column="parent_id" jdbcType="VARCHAR" property="parentId" />
+    <result column="remarks" jdbcType="VARCHAR" property="remarks" />
+    <result column="level" jdbcType="VARCHAR" property="levelInfo" />
+    <result column="subcount" jdbcType="VARCHAR" property="subOrgCount" />
+  </resultMap>
+
+
+  <!--有父级机构关联的结果-->
+  <resultMap id="resultWithParent" type="com.dms.api.modules.entity.basis.org.BmSysOrganizationWithParent">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="org_id" jdbcType="VARCHAR" property="orgId" />
+    <result column="org_code" jdbcType="VARCHAR" property="orgCode" />
+    <result column="org_name" jdbcType="VARCHAR" property="orgName" />
+    <result column="org_sequence" jdbcType="VARCHAR" property="orgSequence" />
+    <result column="dealer_id" jdbcType="VARCHAR" property="dealerId" />
+    <result column="broker_dealer_id" jdbcType="VARCHAR" property="brokerDealerId" />
+    <result column="base_info_i_d_card" jdbcType="VARCHAR" property="baseInfoIDCard" />
+    <result column="base_info_i_d_type" jdbcType="VARCHAR" property="baseInfoIDType" />
+    <result column="base_info_telephone" jdbcType="VARCHAR" property="baseInfoTelephone" />
+    <result column="parent_id" jdbcType="VARCHAR" property="parentId" />
+    <result column="remarks" jdbcType="VARCHAR" property="remarks" />
+    <result column="level" jdbcType="VARCHAR" property="levelInfo" />
+    <result column="subcount" jdbcType="VARCHAR" property="subOrgCount" />
+    <association property="parent" javaType="com.dms.api.modules.entity.basis.org.BmSysOrganization">
+      <result column="p_org_id" jdbcType="VARCHAR" property="orgId" />
+      <result column="p_org_code" jdbcType="VARCHAR" property="orgCode" />
+      <result column="p_org_name" jdbcType="VARCHAR" property="orgName" />
+    </association>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, org_id, org_code, org_name, org_sequence, dealer_id, broker_dealer_id, base_info_i_d_card, 
+    base_info_i_d_type, base_info_telephone, parent_id, remarks
+  </sql>
+
+  <select id="queryListByOrg" resultType="com.dms.api.modules.entity.basis.org.BmSysOrganization">
+    select * from bm_sys_organization
+    <trim suffixOverrides="and">
+    <where>
+      <if test="id != null">
+        id = #{id} and
+      </if>
+      <if test="orgId != null">
+        org_id = #{orgId}and
+      </if>
+      <if test="orgCode != null">
+        org_code = #{orgCode}and
+      </if>
+      <if test="orgName != null">
+        bm_org_name = #{orgName}and
+      </if>
+      <if test="orgSequence != null">
+        org_sequence = #{orgSequence}
+      </if>
+      <if test="dealerId != null">
+        dealer_id = #{dealerId}and
+      </if>
+      <if test="baseInfoTelephone != null">
+        base_info_telephone = #{baseInfoTelephone}and
+      </if>
+      <if test="baseInfoIDCard != null">
+        base_info_i_d_card = #{baseInfoIDCard}and
+      </if>
+      <if test="brokerDealerId != null">
+        broker_dealer_id = #{brokerDealerId}and
+      </if>
+      <if test="parentId != null">
+        parent_id = #{parentId}
+      </if>
+
+    </where>
+
+    </trim>
+  </select>
+
+  <select id="selectDearlerIdByOrgId" parameterType="java.lang.String" resultType="java.lang.String">
+    select 
+    dealer_id
+    from bm_sys_organization
+    where org_id = #{orgId,jdbcType=BIGINT}
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from bm_sys_organization
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+  <!--报表部分-->
+
+  <sql id="withParenColunm">
+    ,t1.org_id as p_org_id,t1.parent_id as p_parent_id,t1.org_code as p_org_code,t1.org_name as p_org_name
+  </sql>
+  <sql id="withParenTable">
+    LEFT JOIN bm_sys_organization t1 on t1.org_id = t.parent_id
+  </sql>
+
+  <sql id="coreSQL">
+    <if test=" level == null or level == 0 ">
+      SELECT
+      t.org_id,
+      t.org_code,
+      t.org_name,
+      t.org_sequence,
+      t.dealer_id,
+      t.broker_dealer_id,
+      t.base_info_i_d_card,
+      t.base_info_i_d_type,
+      t.base_info_telephone,
+      t.parent_id,
+      t.into_time,
+      t.level,
+      t.subcount
+
+      <if test="withParent != null and withParent.trim() != ''">
+        <include refid="withParenColunm"/>
+      </if>
+
+      from (
+
+      <foreach collection="views" index="i" item="item" separator="UNION">
+
+        SELECT
+        org_id,
+        org_code,
+        org_name,
+        org_sequence,
+        dealer_id,
+        broker_dealer_id,
+        base_info_i_d_card,
+        base_info_i_d_type,
+        base_info_telephone,
+        parent_id,into_time,
+        level,
+        subcount
+        FROM
+        ${item}
+      </foreach>
+
+      ) t
+
+      <if test="withParent != null and withParent.trim() != ''">
+        <include refid="withParenTable"/>
+      </if>
+
+      <trim prefix="WHERE" suffixOverrides="and">
+        1=1 and
+        <if test="dealerId != null and dealerId.trim() != '' ">
+          t.broker_dealer_id = #{dealerId} and
+        </if>
+        <if test="orgCode != null and orgCode.trim() != '' ">
+          t.org_code = #{orgCode} and
+        </if>
+        <if test="startTime != null and startTime.trim() != '' ">
+          t.into_time >= #{startTime} and
+        </if>
+        <if test="endTime != null and endTime.trim() != '' ">
+          t.into_time &lt;= #{endTime} and
+        </if>
+      </trim>
+
+      ORDER BY t.into_time ${order}
+
+      <if test="offset != null and limit != null">
+        limit #{offset}, #{limit}
+      </if>
+    </if>
+
+
+    <if test="level != null and level.trim() != '' and level != 0 ">
+      SELECT
+      t.org_id,
+      t.org_code,
+      t.org_name,
+      t.org_sequence,
+      t.dealer_id,
+      t.broker_dealer_id,
+      t.base_info_i_d_card,
+      t.base_info_i_d_type,
+      t.base_info_telephone,
+      t.parent_id,
+      t.into_time,
+      t.level,
+      t.subcount
+      <if test="withParent != null and withParent.trim() != ''">
+        <include refid="withParenColunm"/>
+      </if>
+      FROM
+
+      ${views[0]} t
+
+      <if test="withParent != null and withParent.trim() != ''">
+        <include refid="withParenTable"/>
+      </if>
+
+      <trim prefix="WHERE" suffixOverrides="and">
+        1=1 and
+        <if test="dealerId != null and dealerId.trim() != '' ">
+          t.broker_dealer_id = #{dealerId} and
+        </if>
+        <if test="orgCode != null and orgCode.trim() != '' ">
+          t.org_code = #{orgCode} and
+        </if>
+        <if test="startTime != null and startTime.trim() != '' ">
+          t.into_time >= #{startTime} and
+        </if>
+        <if test="endTime != null and endTime.trim() != '' ">
+          t.into_time &lt;= #{endTime} and
+        </if>
+      </trim>
+      ORDER BY t.into_time ${order}
+      <if test="offset != null and limit != null">
+        limit #{offset}, #{limit}
+      </if>
+    </if>
+  </sql>
+
+
+  <!--无需父级信息-->
+  <select id="queryListInLevel" resultMap="BaseResultMap" parameterType="map">
+        <include refid="coreSQL"/>
+  </select>
+
+  <!--需要父级信息-->
+  <select id="queryListInLevelWith" resultMap="resultWithParent" parameterType="map">
+    <include refid="coreSQL"/>
+  </select>
+
+  <select id="getUserCountWithOrg" resultType="map">
+    SELECT
+      org_id,count(*) as count
+    FROM
+      view_bm_users
+    <if test="list != null and list.size() >0">
+      WHERE org_id in (
+        <foreach collection="list" index="i" item="item" separator=",">
+          ${item}
+        </foreach>
+      )
+    </if>
+
+    GROUP by org_id
+  </select>
+
+  <select id="queryListInLevelTotal" resultType="int">
+    <if test=" level == null or level == 0 ">
+      SELECT
+        count(*)
+      from (
+
+      <foreach collection="views" index="i" item="item" separator="UNION">
+
+        SELECT
+        org_id,
+        org_code,
+        org_name,
+        org_sequence,
+        dealer_id,
+        broker_dealer_id,
+        base_info_i_d_card,
+        base_info_i_d_type,
+        base_info_telephone,
+        parent_id,into_time,
+        level,
+        subcount
+        FROM
+        ${item}
+      </foreach>
+
+      ) t
+
+      <trim prefix="WHERE" suffixOverrides="and">
+        1=1 and
+        <if test="dealerId != null and dealerId.trim() != '' ">
+          t.broker_dealer_id = #{dealerId} and
+        </if>
+        <if test="orgCode != null and orgCode.trim() != '' ">
+          t.org_code = #{orgCode} and
+        </if>
+        <if test="startTime != null and startTime.trim() != '' ">
+          t.into_time >= #{startTime} and
+        </if>
+        <if test="endTime != null and endTime.trim() != '' ">
+          t.into_time &lt;= #{endTime} and
+        </if>
+      </trim>
+    </if>
+
+
+    <if test="level != null and level.trim() != '' and level != 0 ">
+      SELECT
+       count(*)
+      FROM
+
+      ${views[0]} t
+
+      <trim prefix="WHERE" suffixOverrides="and">
+        1=1 and
+        <if test="dealerId != null and dealerId.trim() != '' ">
+          t.broker_dealer_id = #{dealerId} and
+        </if>
+        <if test="orgCode != null and orgCode.trim() != '' ">
+          t.org_code = #{orgCode} and
+        </if>
+        <if test="startTime != null and startTime.trim() != '' ">
+          t.into_time >= #{startTime} and
+        </if>
+        <if test="endTime != null and endTime.trim() != '' ">
+          t.into_time &lt;= #{endTime} and
+        </if>
+      </trim>
+
+    </if>
+  </select>
+</mapper>

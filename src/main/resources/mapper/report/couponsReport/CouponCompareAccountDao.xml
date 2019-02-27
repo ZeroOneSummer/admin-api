@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.report.couponsReport.CouponCompareAccountDao">
+
+  <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.report.couponsReport.CouponCompareAccount">
+    <result column="dealer_code" property="dealerCode" />
+    <result column="real_use_money" property="realUseMoney" />
+    <result column="back_money" property="backMoney" />
+    <result column="order_money" property="orderMoney" />
+    <result column="profit_close" property="profitClose" />
+    <result column="profit_close_sub" property="profitCloseSub" />
+    <result column="over_due_money" property="overDueMoney" />
+    <result column="charge_open"  property="chargeOpen" />
+    <result column="extra_charge" property="extraCharge" />
+    <result column="loss_money" property="lossMoney" />
+  </resultMap>
+
+  <select id="queryList" resultMap="BaseResultMap">
+
+      select
+        bd.dealer_code as dealer_code,
+        (
+        select
+        IFNULL(sum(amlog.am_change),0)
+        from
+        coupon_amountlog amlog,
+        coupon_order co,
+        coupon_warehouse cw,
+        coupon_detail cd
+        where
+        amlog.coupon_sn=co.coupon_sn
+        and co.coupon_sn=cw.coupon_sn
+        and cw.coupon_no=cd.coupon_no
+        and cd.dealer_id=bd.dealer_id
+        and amlog.status='1' and amlog.type in('C002')
+        and co.order_close_no is not null
+        <if test="couponNo != null and couponNo != ''">
+          AND cd.coupon_no = #{couponNo}
+        </if>
+        <if test="startTime != null">
+          AND co.cre_date >= #{startTime}
+        </if>
+        <if test="endTime != null">
+          AND co.cre_date &lt;= DATE_ADD(#{endTime},INTERVAL 8 HOUR)
+        </if>
+        ) as real_use_money,
+        (
+        select
+        IFNULL(sum(amlog.am_change),0)
+        from
+        coupon_amountlog amlog,
+        coupon_order co,
+        coupon_warehouse cw,
+        coupon_detail cd
+        where
+        amlog.coupon_sn=co.coupon_sn
+        and co.coupon_sn=cw.coupon_sn
+        and cw.coupon_no=cd.coupon_no
+        and cd.dealer_id=bd.dealer_id
+        and amlog.status='1' and amlog.type in('C005')
+        and co.order_close_no is not null
+        <if test="couponNo != null and couponNo != ''">
+          AND cd.coupon_no = #{couponNo}
+        </if>
+        <if test="startTime != null">
+          AND co.cre_date >= #{startTime}
+        </if>
+        <if test="endTime != null">
+          AND co.cre_date &lt;= DATE_ADD(#{endTime},INTERVAL 8 HOUR)
+        </if>
+        ) as back_money,
+        (
+        select
+        IFNULL(sum(amlog.am_change),0)
+        from
+        coupon_amountlog amlog,
+        coupon_order co,
+        coupon_warehouse cw,
+        coupon_detail cd
+        where
+        amlog.coupon_sn=co.coupon_sn
+        and co.coupon_sn=cw.coupon_sn
+        and cw.coupon_no=cd.coupon_no
+        and cd.dealer_id=bd.dealer_id
+        and amlog.status='1' and amlog.type in('C003')
+        and co.order_close_no is not null
+        <if test="couponNo != null and couponNo != ''">
+          AND cd.coupon_no = #{couponNo}
+        </if>
+        <if test="startTime != null">
+          AND co.cre_date >= #{startTime}
+        </if>
+        <if test="endTime != null">
+          AND co.cre_date &lt;= DATE_ADD(#{endTime},INTERVAL 8 HOUR)
+        </if>
+        ) as order_money,
+        (
+        select
+        IFNULL(sum(co.profit_close),0)
+        from
+        coupon_order co,
+        coupon_warehouse cw,
+        coupon_detail cd
+        where
+        co.coupon_sn=cw.coupon_sn
+        and cw.coupon_no=cd.coupon_no
+        and cd.dealer_id=bd.dealer_id
+        and co.profit_close >= 0
+        and co.order_close_no is not null
+        <if test="couponNo != null and couponNo != ''">
+          AND cd.coupon_no = #{couponNo}
+        </if>
+        <if test="startTime != null">
+          AND co.cre_date >= #{startTime}
+        </if>
+        <if test="endTime != null">
+          AND co.cre_date &lt;= DATE_ADD(#{endTime},INTERVAL 8 HOUR)
+        </if>
+        ) as profit_close,
+        (
+        select
+        IFNULL(sum(co.profit_close),0)
+        from
+        coupon_order co,
+        coupon_warehouse cw,
+        coupon_detail cd
+        where
+        co.coupon_sn=cw.coupon_sn
+        and cw.coupon_no=cd.coupon_no
+        and cd.dealer_id=bd.dealer_id
+        and co.profit_close &lt; 0
+        and co.order_close_no is not null
+        <if test="couponNo != null and couponNo != ''">
+          AND cd.coupon_no = #{couponNo}
+        </if>
+        <if test="startTime != null">
+          AND co.cre_date >= #{startTime}
+        </if>
+        <if test="endTime != null">
+          AND co.cre_date &lt;= DATE_ADD(#{endTime},INTERVAL 8 HOUR)
+        </if>
+        ) as profit_close_sub,
+        (
+        select
+        IFNULL(sum(ord.charge_open),0)
+        from
+        bm_trade_order ord,
+        coupon_order co,
+        coupon_warehouse cw,
+        coupon_detail cd
+        where
+        ord.order_code=co.order_no
+        and co.coupon_sn=cw.coupon_sn
+        and cw.coupon_no=cd.coupon_no
+        and cd.dealer_id=bd.dealer_id
+        and co.order_close_no is not null
+        <if test="couponNo != null and couponNo != ''">
+          AND cd.coupon_no = #{couponNo}
+        </if>
+        <if test="startTime != null">
+          AND co.cre_date >= #{startTime}
+        </if>
+        <if test="endTime != null">
+          AND co.cre_date &lt;= DATE_ADD(#{endTime},INTERVAL 8 HOUR)
+        </if>
+        )as charge_open,
+        (
+        select
+        IFNULL(sum(ord.extra_charge),0)
+        from
+        bm_trade_order ord,
+        coupon_order co,
+        coupon_warehouse cw,
+        coupon_detail cd
+        where
+        ord.order_code=co.order_no
+        and co.coupon_sn=cw.coupon_sn
+        and cw.coupon_no=cd.coupon_no
+        and cd.dealer_id=bd.dealer_id
+        and co.order_close_no is not null
+        <if test="couponNo != null and couponNo != ''">
+          AND cd.coupon_no = #{couponNo}
+        </if>
+        <if test="startTime != null">
+          AND co.cre_date >= #{startTime}
+        </if>
+        <if test="endTime != null">
+          AND co.cre_date &lt;= DATE_ADD(#{endTime},INTERVAL 8 HOUR)
+        </if>
+        )as extra_charge,
+        (
+        select
+        IFNULL(sum(amlog.am_change),0)
+        from
+        coupon_amountlog amlog,
+        coupon_warehouse cw,
+        coupon_detail cd
+        where
+        amlog.coupon_sn=cw.coupon_sn
+        and cw.coupon_no=cd.coupon_no
+        and cd.dealer_id=bd.dealer_id
+        and amlog.status='1'
+        and amlog.type in('C004')
+        <if test="couponNo != null and couponNo != ''">
+          AND cd.coupon_no = #{couponNo}
+        </if>
+        <if test="startTime != null">
+          AND amlog.create_time >= DATE_ADD(#{startTime},INTERVAL -4 HOUR)
+        </if>
+        <if test="endTime != null">
+          AND amlog.create_time &lt;= DATE_ADD(#{endTime},INTERVAL 270 MINUTE)
+        </if>
+        ) as over_due_money,
+        (
+        SELECT
+        IFNULL(sum(abs(co.return_money)), 0)
+        FROM
+        coupon_order co,
+        coupon_warehouse cw,
+        coupon_detail cd
+        WHERE
+        co.coupon_sn = cw.coupon_sn
+        AND cw.coupon_no = cd.coupon_no
+        AND cd.dealer_id = bd.dealer_id
+        AND co.order_close_no IS NOT NULL
+        AND co.return_money &lt;= 0
+        <if test="couponNo != null and couponNo != ''">
+          AND cd.coupon_no = #{couponNo}
+        </if>
+        <if test="startTime != null">
+          AND co.cre_date >= #{startTime}
+        </if>
+        <if test="endTime != null">
+          AND co.cre_date &lt;= DATE_ADD(#{endTime},INTERVAL 8 HOUR)
+        </if>
+        ) AS loss_money
+      from
+        bm_dealer_info bd
+      <where>
+        bd.dealer_type='3'
+        <if test="dealerId != null and dealerId != ''">
+          AND bd.dealer_id = #{dealerId}
+        </if>
+        <if test="dealerCode != null and dealerCode != ''">
+          AND bd.dealer_code = #{dealerCode}
+        </if>
+      </where>
+      <choose>
+        <when test="sidx != null and sidx.trim() != ''">
+          order by ${sidx} ${order}
+        </when>
+        <otherwise>
+          order by bd.dealer_code desc
+        </otherwise>
+      </choose>
+      <if test="offset != null and limit != null">
+        limit #{offset}, #{limit}
+      </if>
+  </select>
+
+
+  <select id="queryTotal" resultType="int">
+      select
+        count(*)
+      from
+        bm_dealer_info bd
+      <where>
+        bd.dealer_type='3'
+        <if test="dealerId != null and dealerId != ''">
+          AND bd.dealer_id = #{dealerId}
+        </if>
+        <if test="dealerCode != null and dealerCode != ''">
+          AND bd.dealer_code = #{dealerCode}
+        </if>
+      </where>
+  </select>
+
+</mapper>

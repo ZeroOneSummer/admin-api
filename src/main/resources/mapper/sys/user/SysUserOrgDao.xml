@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dms.api.modules.dao.sys.user.SysUserOrgDao">
+
+	<insert id="save">
+		insert into sys_user_org
+		(
+		`sys_user_id`,
+		`bm_org_id`
+		)
+		values
+		<foreach collection="menuIdList" item="item" index="index"
+			separator=",">
+			(
+			#{roleId},
+			#{item}
+			)
+		</foreach>
+	</insert>
+
+	<select id="queryList" resultType="com.dms.api.modules.entity.sys.user.SysUserOrgEntity" parameterType="map">
+		select *
+		sys_user_org 
+		<where>
+			<if test="user_id != null">
+				sys_user_id = #{user_id}
+			</if>
+			<if test="user_id != null">
+				and bm_org_id = #{org_id}
+			</if>
+		</where>
+	</select>
+
+</mapper>

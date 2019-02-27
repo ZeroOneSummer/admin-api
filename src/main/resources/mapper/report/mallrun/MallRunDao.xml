@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dms.api.modules.dao.report.mallrun.MallRunDao">
+
+	<!-- 1.按年统计单个服务商 countType='Y'，dealerId!=-1 -->
+	<select id="mallRunCount1" resultType="com.dms.api.modules.entity.report.mallrun.MallRunEntity">
+		select
+			dealerCode,
+			`type`,
+			price,
+			traMon as traDay
+		from
+			mall_run_settlement
+		where
+			dealerId = #{dealerId}
+			and `type` = #{type}
+			and timeType = 'M'
+			and left(traMon,4) = #{year}
+	</select>
+
+	<!-- 2.按年统计所有服务商 countType='Y'，dealerId=-1 -->
+	<select id="mallRunCount2" resultType="com.dms.api.modules.entity.report.mallrun.MallRunEntity">
+		select
+			`type`,
+			sum(price) price,
+			traMon as traDay
+		from
+			mall_run_settlement
+		where
+			`type` = #{type}
+			and timeType = 'M'
+			and left(traMon,4) = #{year}
+		group by
+			traMon
+	</select>
+
+
+
+	<!-- 3.按月统计单个服务商单日 countType='M'，dealerId!=-1，DataType='SIG' -->
+	<select id="mallRunCount3" resultType="com.dms.api.modules.entity.report.mallrun.MallRunEntity">
+		select
+			dealerCode,
+			`type`,
+			price,
+			traDay
+		from
+			mall_run_settlement
+		where
+			dealerId = #{dealerId}
+			and `type` = #{type}
+			and timeType = 'D'
+			and left(traDay,4) = #{year}
+			and MID(traDay,6,2) = #{month}
+	</select>
+
+	<!-- 4.按月统计单个服务商累计 countType='M'，dealerId!=-1，DataType='ADD' -->
+	<select id="mallRunCount4" resultType="com.dms.api.modules.entity.report.mallrun.MallRunEntity">
+		select
+			dealerCode,
+			`type`,
+			price,
+			accumPrice,
+			traDay
+		from
+			mall_run_settlement_total
+		where
+			dealerId = #{dealerId}
+			and `type` = #{type}
+			and timeType = 'D'
+			and left(traDay,4) = #{year}
+			and MID(traDay,6,2) = #{month}
+	</select>
+
+	<!-- 5.按月统计所有服务商单日 countType='M'，dealerId=-1，DataType='SIG' -->
+	<select id="mallRunCount5" resultType="com.dms.api.modules.entity.report.mallrun.MallRunEntity">
+		select
+			`type`,
+			sum(price) as price,
+			traDay
+		from
+			mall_run_settlement
+		where
+			`type` = #{type}
+			and timeType = 'D'
+			and left(traDay,4) = #{year}
+			and MID(traDay,6,2) = #{month}
+		group by
+			traDay
+	</select>
+
+
+
+
+	<!-- 6.按月统计所有服务商累计 countType='M'，dealerId=-1，DataType='ADD' -->
+	<select id="mallRunCount6" resultType="com.dms.api.modules.entity.report.mallrun.MallRunEntity">
+		call mall_run_query_special(#{qTime},#{type})
+	</select>
+
+
+	<select id="queryDealerList" resultType="java.util.Map">
+		SELECT
+			dealer_id as dealerId,
+			dealer_code as dealerCode,
+			dealer_name as dealerName
+		FROM
+			bm_dealer_info
+		WHERE
+			dealer_type = 3
+			AND LEFT(dealer_code,1) = 'K'
+			OR	dealer_code = 'DT1'
+			OR	dealer_code = 'X10'
+	</select>
+
+</mapper>

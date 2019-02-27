@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.mall.order.info.BmUserAccountDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.dms.api.modules.entity.mall.order.info.BmUserAccountEntity" id="bmUserAccountMap">
+        <result property="id" column="id"/>
+        <result property="accId" column="acc_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="accStatus" column="acc_status"/>
+        <result property="accType" column="acc_type"/>
+        <result property="tradeMarketId" column="trade_market_id"/>
+        <result property="propertyTypeId" column="property_type_id"/>
+        <result property="dealerId" column="dealer_id"/>
+        <result property="remarks" column="remarks"/>
+        <result property="dealerCode" column="dealer_code"/>
+        <result property="dealerName" column="dealer_name"/>
+        <result property="dealerType" column="dealer_type"/>
+        <result property="userName" column="user_name"/>
+
+    </resultMap>
+
+	<select id="queryObject" resultType="com.dms.api.modules.entity.mall.order.info.BmUserAccountEntity">
+		select * from bm_user_account where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.dms.api.modules.entity.mall.order.info.BmUserAccountEntity">
+		select * from bm_user_account
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	<select id="queryListByAccId" resultType="com.dms.api.modules.entity.mall.order.info.BmUserAccountEntity">
+		select t.acc_id, f.user_name
+		from bm_user_account t
+		LEFT JOIN bm_user_infoBrief f on t.user_id = f.user_id
+		WHERE
+		1=1
+		<if test="list != null and list.size > 0">
+			AND t.acc_id in
+			<foreach item="entity" collection="list" open="(" separator="," close=")">
+				#{entity.accId}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="queryListForDealer" resultType="com.dms.api.modules.entity.mall.order.info.BmUserAccountEntity">
+		select t.acc_id, o.dealer_name, o.dealer_code, o.dealer_type, f.user_name
+		from bm_user_account t, bm_dealer_info o, bm_user_infoBrief f
+		where
+		t.dealer_id = o.dealer_id
+		AND
+		t.user_id = f.user_id
+		<if test="dealerCode != null and dealerCode != ''">
+			AND dealer_code = #{dealerCode}
+		</if>
+		<if test="accTypes != null and accTypes != ''">
+			AND acc_type in
+			<foreach item="accType" collection="accTypes" open="(" separator="," close=")">
+				#{accType}
+			</foreach>
+		</if>
+	</select>
+	<select id="queryListForDealerTotal" resultType="com.dms.api.modules.entity.mall.order.info.BmUserAccountEntity">
+		select count(*)
+		from bm_user_account t, bm_dealer_info o, bm_user_infoBrief f
+		where
+		t.dealer_id = o.dealer_id
+		AND
+		t.user_id = f.user_id
+		<if test="dealerCode != null and dealerCode != ''">
+			AND dealer_code = #{dealerCode}
+		</if>
+		<if test="accTypes != null and accTypes != ''">
+			AND acc_type in
+			<foreach item="accType" collection="accTypes" open="(" separator="," close=")">
+				#{accType}
+			</foreach>
+		</if>
+	</select>
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from bm_user_account 
+	</select>
+</mapper>

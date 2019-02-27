@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dms.api.modules.dao.mall.order.refund.VerifyRecordDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.dms.api.modules.entity.mall.order.refund.VerifyRecordEntity" id="verifyRecordMap">
+        <result property="id" column="id"/>
+        <result property="type" column="type"/>
+        <result property="status" column="status"/>
+        <result property="nextVerify" column="next_verify"/>
+        <result property="verifyTime" column="verify_time"/>
+        <result property="referType" column="refer_type"/>
+        <result property="referId" column="refer_id"/>
+        <result property="verifyBy" column="verify_by"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.dms.api.modules.entity.mall.order.refund.VerifyRecordEntity">
+		select * from verify_record where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.dms.api.modules.entity.mall.order.refund.VerifyRecordEntity">
+		select * from verify_record
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from verify_record 
+	</select>
+	 
+	<insert id="save" parameterType="com.dms.api.modules.entity.mall.order.refund.VerifyRecordEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into verify_record
+		(
+			`type`, 
+			`status`, 
+			`next_verify`,
+			`verify_time`,
+			`refer_type`, 
+			`refer_id`, 
+			`verify_by`,
+			remark
+		)
+		values
+		(
+			#{type}, 
+			#{status}, 
+			#{nextVerify},
+			#{verifyTime},
+			#{referType}, 
+			#{referId}, 
+			#{verifyBy},
+			#{remark}
+		)
+	</insert>
+
+	<insert id="insertBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+		insert into verify_record
+		(
+			`type`,
+			`status`,
+			`next_verify`,
+			`verify_time`,
+			`refer_type`,
+			`refer_id`,
+			`verify_by`,
+			remark
+		)
+		values
+		<foreach collection="list" item="record" index="index" separator=",">
+		(
+			#{record.type},
+			#{record.status},
+			#{record.nextVerify},
+			#{record.verifyTime},
+			#{record.referType},
+			#{record.referId},
+			#{record.verifyBy},
+			#{record.remark}
+		)
+		</foreach>
+	</insert>
+	 
+	<update id="update" parameterType="com.dms.api.modules.entity.mall.order.refund.VerifyRecordEntity">
+		update verify_record 
+		<set>
+			<if test="type != null">`type` = #{type}, </if>
+			<if test="status != null">`status` = #{status}, </if>
+			<if test="nextVerify != null">`next_verify` = #{nextVerify}, </if>
+			<if test="verifyTime != null">`verify_time` = #{verifyTime}, </if>
+			<if test="referType != null">`refer_type` = #{referType}, </if>
+			<if test="referId != null">`refer_id` = #{referId}, </if>
+			<if test="verifyBy != null">`verify_by` = #{verifyBy}</if>
+			<if test="remark != null">`remark` = #{remark}</if>
+		</set>
+		where id = #{id}
+	</update>
+	<update id="verifyBatch">
+		update verify_record
+		<set>
+			<if test="status != null">`status` = #{status}, </if>
+			<if test="remark != null">`remark` = #{remark}</if>
+		</set>
+		where id in
+		<foreach item="id" collection="ids" open="(" separator="," close=")">
+		#{id}
+		</foreach>
+		AND refer_type = #{referType}
+	</update>
+	<update id="updateByReferId" parameterType="com.dms.api.modules.entity.mall.order.refund.VerifyRecordEntity">
+		update verify_record
+		<set>
+			<if test="status != null">`status` = #{status}, </if>
+			<if test="verifyTime != null">`verify_time` = #{verifyTime}, </if>
+			<if test="verifyBy != null">`verify_by` = #{verifyBy}</if>
+			<if test="remark != null">`remark` = #{remark}</if>
+		</set>
+		where refer_id = #{referId} AND refer_type = #{referType}
+	</update>
+	
+	<delete id="delete">
+		delete from verify_record where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		delete from verify_record where id in 
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

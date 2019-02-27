@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.mall.user.ModificationPhoneNumDao">
+
+    <select id="queryList" resultType="com.dms.api.modules.entity.mall.user.ModificationPhoneNumEntity">
+        select
+            vs.login_code as loginCode,
+            vs.acc_status as accStatus,
+            vs.user_name as userName,
+            vs.phone as phone,
+            vs.servicenum as serviceNum,
+            vs.bm_org_num as bmOrgNum,
+            bc.am_margin_remain as amMarginRemain,
+            vs.into_time as intoTime,
+            sl.levelName as levelName
+        from
+            view_bm_users vs
+            LEFT join bm_user_money bc on bc.acc_id= vs.acc_id
+            LEFT JOIN df_mall_user_info bmu on bmu.u_user_logincode = vs.login_code
+            LEFT join sys_levelinfo sl on bmu.u_level_id = sl.levelCode
+        <where>
+            1 = 1
+            <if test="loginCode != null and loginCode != '' ">
+                and vs.login_code=#{loginCode}
+            </if>
+            <if test="userName != null and userName != '' ">
+                and vs.user_name like concat('%',#{userName},'%')
+            </if>
+            <if test="phone != null and phone != '' ">
+                and vs.phone=#{phone}
+            </if>
+            <choose>
+                <when test="sidx != null and sidx.trim() != ''">
+                    order by ${sidx} ${order}
+                </when>
+                <otherwise>
+                    order by vs.into_time desc
+                </otherwise>
+            </choose>
+            <if test="offset != null and limit != null">
+                limit #{offset}, #{limit}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryTotal" resultType="int">
+        select
+            count(*)
+        from
+            view_bm_users vs
+            LEFT join bm_user_money bc on bc.acc_id= vs.acc_id
+            LEFT JOIN df_mall_user_info bmu on bmu.u_user_logincode = vs.login_code
+            LEFT join sys_levelinfo sl on bmu.u_level_id = sl.levelCode
+        <where>
+            1 = 1
+            <if test="loginCode != null and loginCode != '' ">
+                and vs.login_code=#{loginCode}
+            </if>
+            <if test="userName != null and userName != '' ">
+                and vs.user_name like concat('%',#{userName},'%')
+            </if>
+            <if test="phone != null and phone != '' ">
+                and vs.phone=#{phone}
+            </if>
+        </where>
+    </select>
+
+</mapper>

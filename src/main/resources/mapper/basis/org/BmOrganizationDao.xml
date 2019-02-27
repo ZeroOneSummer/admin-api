@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dms.api.modules.dao.basis.org.BmOrganizationDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.dms.api.modules.entity.basis.org.BmOrganizationEntity" id="bmOrganizationMap">
+        <result property="id" column="id"/>
+        <result property="orgId" column="org_id"/>
+        <result property="bmOrgName" column="bm_org_name"/>
+        <result property="bmOrgNum" column="bm_org_num"/>
+        <result property="bmOrgType" column="bm_org_type"/>
+        <result property="bmOrgParent" column="bm_org_parent"/>
+        <result property="remarks" column="remarks"/>
+    </resultMap>
+
+    <select id="queryObject" resultType="com.dms.api.modules.entity.basis.org.BmOrganizationEntity">
+		select * from bm_organization where id = #{value}
+	</select>
+
+    <select id="queryListByOrg" resultType="com.dms.api.modules.entity.basis.org.BmOrganizationEntity">
+        select * from bm_organization
+        <where>
+            <if test="id != null">
+                id = #{id}
+            </if>
+            <if test="orgId != null">
+                org_id = #{orgId}
+            </if>
+            <if test="bmOrgName != null">
+                bm_org_name = #{bmOrgName}
+            </if>
+            <if test="bmOrgNum != null">
+                bm_org_num = #{bmOrgNum}
+            </if>
+            <if test="bmOrgType != null">
+                bm_org_type = #{bmOrgType}
+            </if>
+            <if test="bmOrgParent != null">
+                bm_org_parent = #{bmOrgParent}
+            </if>
+            <if test="intoDate != null">
+                into_date = #{intoDate}
+            </if>
+            <if test="intoUser != null">
+                into_user = #{intoUser}
+            </if>
+            <if test="updDate != null">
+                upd_date = #{updDate}
+            </if>
+            <if test="updUser != null">
+                upd_user = #{updUser}
+            </if>
+            <if test="remarks != null">
+                remarks = #{remarks}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryTotal" resultType="int">
+		select count(*) from bm_organization 
+	</select>
+
+    <insert id="save" parameterType="com.dms.api.modules.entity.basis.org.BmOrganizationEntity" useGeneratedKeys="true"
+            keyProperty="id">
+		insert into bm_organization
+		(
+			`org_id`, 
+			`bm_org_name`, 
+			`bm_org_num`, 
+			`bm_org_type`, 
+			`bm_org_parent`, 
+			`into_date`, 
+			`into_user`, 
+			`upd_date`, 
+			`upd_user`, 
+			`remarks`
+		)
+		values
+		(
+			#{orgId}, 
+			#{bmOrgName}, 
+			#{bmOrgNum}, 
+			#{bmOrgType}, 
+			#{bmOrgParent}, 
+			#{intoDate}, 
+			#{intoUser}, 
+			#{updDate}, 
+			#{updUser}, 
+			#{remarks}
+		)
+	</insert>
+
+    <update id="update" parameterType="com.dms.api.modules.entity.basis.org.BmOrganizationEntity">
+        update bm_organization
+        <set>
+            <if test="orgId != null">`org_id` = #{orgId},</if>
+            <if test="bmOrgName != null">`bm_org_name` = #{bmOrgName},</if>
+            <if test="bmOrgNum != null">`bm_org_num` = #{bmOrgNum},</if>
+            <if test="bmOrgType != null">`bm_org_type` = #{bmOrgType},</if>
+            <if test="bmOrgParent != null">`bm_org_parent` = #{bmOrgParent},</if>
+            <if test="intoDate != null">`into_date` = #{intoDate},</if>
+            <if test="intoUser != null">`into_user` = #{intoUser},</if>
+            <if test="updDate != null">`upd_date` = #{updDate},</if>
+            <if test="updUser != null">`upd_user` = #{updUser},</if>
+            <if test="remarks != null">`remarks` = #{remarks}</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="delete">
+		delete from bm_organization where id = #{value}
+	</delete>
+
+    <delete id="deleteBatch">
+        delete from bm_organization where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.mall.order.info.BmTradeOrderDao">
+    
+    <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.mall.order.info.BmTradeOrder">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="acc_id" jdbcType="VARCHAR" property="accId"/>
+        <result column="order_code" jdbcType="VARCHAR" property="orderCode"/>
+        <result column="open_hold_price" jdbcType="DECIMAL" property="openHoldPrice"/>
+        <result column="charge_referr" jdbcType="DECIMAL" property="chargeReferr"/>
+        <result column="profit_close" jdbcType="DECIMAL" property="profitClose"/>
+        <result column="margin_used" jdbcType="DECIMAL" property="marginUsed"/>
+        <result column="trade_market_id" jdbcType="BIGINT" property="tradeMarketId"/>
+        <result column="margin_used_calc" jdbcType="REAL" property="marginUsedCalc"/>
+        <result column="use_coupon" jdbcType="VARCHAR" property="useCoupon"/>
+        <result column="open_price" jdbcType="DECIMAL" property="openPrice"/>
+        <result column="order_status" jdbcType="VARCHAR" property="orderStatus"/>
+        <result column="margin_calculet_type" jdbcType="VARCHAR" property="marginCalculetType"/>
+        <result column="charge_open" jdbcType="DECIMAL" property="chargeOpen"/>
+        <result column="quoted_decimal" jdbcType="INTEGER" property="quotedDecimal"/>
+        <result column="price_take_profit" jdbcType="DECIMAL" property="priceTakeProfit"/>
+        <result column="binary_quantity" jdbcType="INTEGER" property="binaryQuantity"/>
+        <result column="closed_quantity" jdbcType="INTEGER" property="closedQuantity"/>
+        <result column="point_take_profit" jdbcType="INTEGER" property="pointTakeProfit"/>
+        <result column="symbol_id" jdbcType="VARCHAR" property="symbolId"/>
+        <result column="delivery_margin" jdbcType="DECIMAL" property="deliveryMargin"/>
+        <result column="order_price" jdbcType="DECIMAL" property="orderPrice"/>
+        <result column="complete_amount" jdbcType="DECIMAL" property="completeAmount"/>
+        <result column="delivery_status" jdbcType="VARCHAR" property="deliveryStatus"/>
+        <result column="trading_day" jdbcType="VARCHAR" property="tradingDay"/>
+        <result column="order_quantity" jdbcType="INTEGER" property="orderQuantity"/>
+        <result column="binary_mode" jdbcType="VARCHAR" property="binaryMode"/>
+        <result column="deal_time" jdbcType="VARCHAR" property="dealTime"/>
+        <result column="valid_date_type" jdbcType="VARCHAR" property="validDateType"/>
+        <result column="daily_s_profit" jdbcType="DECIMAL" property="dailySProfit"/>
+        <result column="sku" jdbcType="VARCHAR" property="sku"/>
+        <result column="order_time" jdbcType="VARCHAR" property="orderTime"/>
+        <result column="point_bid" jdbcType="INTEGER" property="pointBid"/>
+        <result column="contract_size" jdbcType="DOUBLE" property="contractSize"/>
+        <result column="margin_freezed" jdbcType="DECIMAL" property="marginFreezed"/>
+        <result column="valid_date" jdbcType="VARCHAR" property="validDate"/>
+        <result column="binary_win_flag" jdbcType="VARCHAR" property="binaryWinFlag"/>
+        <result column="hold_price" jdbcType="DECIMAL" property="holdPrice"/>
+        <result column="point_offset" jdbcType="INTEGER" property="pointOffset"/>
+        <result column="point_ask" jdbcType="INTEGER" property="pointAsk"/>
+        <result column="settlement_profit" jdbcType="DECIMAL" property="settlementProfit"/>
+        <result column="charge_interest" jdbcType="DECIMAL" property="chargeInterest"/>
+        <result column="profit_point" jdbcType="DECIMAL" property="profitPoint"/>
+        <result column="price_source" jdbcType="VARCHAR" property="priceSource"/>
+        <result column="group_id" jdbcType="VARCHAR" property="groupId"/>
+        <result column="contract_id" jdbcType="BIGINT" property="contractId"/>
+        <result column="dealer_id" jdbcType="VARCHAR" property="dealerId"/>
+        <result column="delivery_time" jdbcType="VARCHAR" property="deliveryTime"/>
+        <result column="daily_charge_interest" jdbcType="DECIMAL" property="dailyChargeInterest"/>
+        <result column="price_stop_lose" jdbcType="DECIMAL" property="priceStopLose"/>
+        <result column="point_stop_lose" jdbcType="INTEGER" property="pointStopLose"/>
+        <result column="complete_quantity" jdbcType="DECIMAL" property="completeQuantity"/>
+        <result column="order_code_re" jdbcType="VARCHAR" property="orderCodeRe"/>
+        <result column="order_type" jdbcType="VARCHAR" property="orderType"/>
+        <result column="charge_close" jdbcType="DECIMAL" property="chargeClose"/>
+        <result column="bs_code" jdbcType="VARCHAR" property="bsCode"/>
+        <result column="skustr" jdbcType="VARCHAR" property="skustr"/>
+        <result column="extra_charge" jdbcType="DECIMAL" property="extraCharge"/>
+        <result column="extra_accout_id" jdbcType="INTEGER" property="extraAccoutId"/>
+        <result column="remarks" jdbcType="VARCHAR" property="remarks"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        id, acc_id, order_code, open_hold_price, charge_referr, profit_close, margin_used,
+        trade_market_id, margin_used_calc, use_coupon, open_price, order_status, margin_calculet_type,
+        charge_open, quoted_decimal, price_take_profit, binary_quantity, closed_quantity,
+        point_take_profit, symbol_id, delivery_margin, order_price, complete_amount, delivery_status,
+        trading_day, order_quantity, binary_mode, deal_time, valid_date_type, daily_s_profit,
+        sku, order_time, point_bid, contract_size, margin_freezed, valid_date, binary_win_flag,
+        hold_price, point_offset, point_ask, settlement_profit, charge_interest, profit_point,
+        price_source, group_id, contract_id, dealer_id, delivery_time, daily_charge_interest,
+        price_stop_lose, point_stop_lose, complete_quantity, order_code_re, order_type, charge_close,
+        bs_code, skustr, extra_charge, extra_accout_id, remarks
+    </sql>
+    
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from bm_trade_order
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <select id="selectByDate"  resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from bm_trade_order
+        where
+        1=1
+        <if test="symbolId != null">
+            AND symbol_id = #{symbolId}
+        </if>
+        <if test="symbolCode != null">
+            AND symbol_id in (
+            SELECT symbol_id FROM bm_symbol_info
+            WHERE
+            symbol_code like CONCAT('%',#{symbolCode},'%'))
+        </if>
+        <if test="sku != null">
+            AND sku = #{sku}
+        </if>
+        <if test="bsCode != null">
+            AND bs_code = #{bsCode}
+        </if>
+        <if test="startTime != null">
+            AND order_time >= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND order_time &lt;= #{endTime}
+        </if>
+        <if test="dealerId != null">
+            AND dealer_id = #{dealerId}
+        </if>
+        <if test="orderType != null">
+            AND order_type = #{orderType}
+        </if>
+        ORDER BY order_time
+    </select>
+
+    <select id="selectByDate_chart"  resultMap="BaseResultMap">
+        select
+        bm_trade_order.id,
+        bm_trade_order.acc_id,
+        bm_trade_order.order_code,
+        bm_trade_order.open_hold_price,
+        bm_trade_order.charge_referr,
+        bm_trade_order.profit_close,
+        bm_trade_order.margin_used,
+        bm_trade_order.trade_market_id,
+        bm_trade_order.margin_used_calc,
+        bm_trade_order.use_coupon,
+        bm_trade_order.open_price,
+        bm_trade_order.order_status,
+        bm_trade_order.margin_calculet_type,
+        bm_trade_order.charge_open,
+        bm_trade_order.quoted_decimal,
+        bm_trade_order.price_take_profit,
+        bm_trade_order.binary_quantity,
+        bm_trade_order.closed_quantity,
+        bm_trade_order.point_take_profit,
+        bm_trade_order.symbol_id,
+        bm_trade_order.delivery_margin,
+        bm_trade_order.order_price,
+        bm_trade_order.complete_amount,
+        bm_trade_order.delivery_status,
+        bm_trade_order.trading_day,
+        bm_trade_order.order_quantity,
+        bm_trade_order.binary_mode,
+        bm_trade_order.deal_time,
+        bm_trade_order.valid_date_type,
+        bm_trade_order.daily_s_profit,
+        bm_trade_order.sku,
+        bm_trade_order.order_time,
+        bm_trade_order.point_bid,
+        bm_trade_order.contract_size,
+        bm_trade_order.margin_freezed,
+        bm_trade_order.valid_date,
+        bm_trade_order.binary_win_flag,
+        bm_trade_order.hold_price,
+        bm_trade_order.point_offset,
+        bm_trade_order.point_ask,
+        bm_trade_order.settlement_profit,
+        bm_trade_order.charge_interest,
+        bm_trade_order.profit_point,
+        bm_trade_order.price_source,
+        bm_trade_order.group_id,
+        bm_trade_order.contract_id,
+        bm_trade_order.dealer_id,
+        bm_trade_order.delivery_time,
+        bm_trade_order.daily_charge_interest,
+        bm_trade_order.price_stop_lose,
+        bm_trade_order.point_stop_lose,
+        bm_trade_order.complete_quantity,
+        bm_trade_order.order_code_re,
+        bm_trade_order.order_type,
+        bm_trade_order.charge_close,
+        bm_trade_order.bs_code,
+        bm_trade_order.skustr,
+        bm_trade_order.extra_charge,
+        bm_trade_order.extra_accout_id,
+        bm_trade_order.remarks
+        from bm_trade_order
+              left JOIN bm_user_account
+              on bm_trade_order.acc_id = bm_user_account.acc_id
+        <trim suffixOverrides="and">
+            where
+              bm_user_account.acc_type in (1,2) and
+              bm_trade_order.order_type=1 and
+
+            <if test="startTime != null">
+                IF
+                (
+                ( DATE_FORMAT( STR_TO_DATE( bm_trade_order.order_time, '%Y%m%dT%H%i%s' ), '%H' ) > 5 ),
+                CAST( STR_TO_DATE( bm_trade_order.order_time, '%Y%m%dT%H%i%s' ) AS DATE ),
+                CAST( DATE_FORMAT( ( STR_TO_DATE( bm_trade_order.order_time, '%Y%m%dT%H%i%s' ) - INTERVAL 1 DAY ), '%Y-%m-%d' ) AS DATE )
+                )
+                  >= #{startTime} AND
+            </if>
+            <if test="endTime != null">
+                IF
+                (
+                ( DATE_FORMAT( STR_TO_DATE( bm_trade_order.order_time, '%Y%m%dT%H%i%s' ), '%H' ) > 5 ),
+                CAST( STR_TO_DATE( bm_trade_order.order_time, '%Y%m%dT%H%i%s' ) AS DATE ),
+                CAST( DATE_FORMAT( ( STR_TO_DATE( bm_trade_order.order_time, '%Y%m%dT%H%i%s' ) - INTERVAL 1 DAY ), '%Y-%m-%d' ) AS DATE )
+                ) &lt;= #{endTime} AND
+            </if>
+            <if test="dealerId != null">
+                 bm_trade_order.dealer_id = #{dealerId}
+            </if>
+        </trim>
+        GROUP BY order_code
+        ORDER BY bm_trade_order.order_time
+    </select>
+</mapper>

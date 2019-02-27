@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.basis.org.BmDealerInfoDao">
+
+    <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.basis.org.BmDealerInfo">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="dealer_id" jdbcType="VARCHAR" property="dealerId"/>
+        <result column="dealer_name" jdbcType="VARCHAR" property="dealerName"/>
+        <result column="dealer_full_name" jdbcType="VARCHAR" property="dealerFullName"/>
+        <result column="dealer_code" jdbcType="VARCHAR" property="dealerCode"/>
+        <result column="base_info_i_d_card" jdbcType="VARCHAR" property="baseInfoIDCard"/>
+        <result column="base_info_i_d_type" jdbcType="VARCHAR" property="baseInfoIDType"/>
+        <result column="base_info_name" jdbcType="VARCHAR" property="baseInfoName"/>
+        <result column="base_info_telephone" jdbcType="VARCHAR" property="baseInfoTelephone"/>
+        <result column="dealer_type" jdbcType="VARCHAR" property="dealerType"/>
+        <result column="remarks" jdbcType="VARCHAR" property="remarks"/>
+    </resultMap>
+
+    <resultMap id="tempEntity" type="com.dms.api.modules.entity.basis.org.TempEntity">
+        <result column="org_name" jdbcType="VARCHAR" property="org_name"/>
+        <result column="org_id" jdbcType="VARCHAR" property="org_id"/>
+        <result column="org_code" jdbcType="VARCHAR" property="org_code"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, dealer_id, dealer_name, dealer_full_name, dealer_code, base_info_i_d_card, base_info_i_d_type,
+        base_info_name, base_info_telephone, dealer_type, remarks
+    </sql>
+
+    <select id="queryList" resultType="com.dms.api.modules.entity.basis.org.BmDealerInfo">
+        select * from bm_dealer_info
+        <where>
+            <if test="dealerName != null and dealerName != '' ">
+                and `dealer_name` like concat('%',#{dealerName},'%')
+            </if>
+            <if test="dealerFullName != null">
+                and `dealer_full_name` like concat('%',#{dealerFullName},'%')
+            </if>
+            <if test="dealerCode != null and dealerCode != '' ">
+                and `dealer_code` = #{dealerCode}
+            </if>
+            <if test="dealerType != null and dealerType != '' ">
+                and `dealer_type` = #{dealerType}
+            </if>
+            <if test="userId != null">
+                and dealer_id IN
+                (
+                SELECT
+                dealer.dealer_id
+                FROM
+                bm_dealer_info dealer,
+                sys_user USER,
+                bm_sys_organization org
+                WHERE
+                USER .user_id = #{userId}
+                AND USER .org_id = org.org_id
+                AND org.dealer_id = dealer.dealer_id)
+            </if>
+        </where>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+            <otherwise>
+                order by id desc
+            </otherwise>
+        </choose>
+        <if test="offset != null and limit != null">
+            limit #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="queryTotal" resultType="int">
+        select COUNT(1) from bm_dealer_info
+        <where>
+            <if test="dealerName != null and dealerName !=''">
+                and `dealer_name` like concat('%',#{dealerName},'%')
+            </if>
+            <if test="dealerFullName != null">
+                and `dealer_full_name` like concat('%',#{dealerFullName},'%')
+            </if>
+            <if test="dealerCode != null and dealerCode != ''">
+                and `dealer_code` = #{dealerCode}
+            </if>
+            <if test="dealerType != null and dealerType != ''">
+                and `dealer_type` = #{dealerType}
+            </if>
+            <if test="userId != null">
+                and dealer_id IN
+                (
+                SELECT
+                dealer.dealer_id
+                FROM
+                bm_dealer_info dealer,
+                sys_user USER,
+                bm_sys_organization org
+                WHERE
+                USER .user_id = #{userId}
+                AND USER .org_id = org.org_id
+                AND org.dealer_id = dealer.dealer_id)
+            </if>
+        </where>
+    </select>
+
+    <select id="getDealers" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT dealer_name,dealer_id,dealer_code FROM bm_dealer_info
+        WHERE
+        dealer_type = 3
+        <if test="dealerId != null and dealerId != ''">
+            AND dealer_id = #{dealerId}
+        </if>
+    </select>
+
+    <select id="getDealerInfos" parameterType="map" resultMap="BaseResultMap">
+        SELECT dealer_name,dealer_id,dealer_code FROM bm_dealer_info
+        WHERE
+        1=1
+        <if test="dealerType != null and dealerType != ''">
+            AND dealer_type = #{dealerType}
+        </if>
+        <if test="dealerId != null and dealerId != ''">
+            AND dealer_id = #{dealerId}
+        </if>
+    </select>
+
+    <select id="getByOrgIDInfos" parameterType="map" resultMap="tempEntity">
+        SELECT
+          org_name,org_id,org_code
+        FROM bm_sys_organization
+        WHERE
+        1=1
+        <if test="org_id != null and org_id != ''">
+            AND org_id = #{org_id}
+        </if>
+
+    </select>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from bm_dealer_info
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+</mapper>

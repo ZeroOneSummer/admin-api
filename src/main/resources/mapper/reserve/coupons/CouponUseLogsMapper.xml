@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.reserve.coupons.CouponUseLogsDao">
+
+    <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.reserve.coupons.CouponUseLogs">
+      <id column="id" jdbcType="INTEGER" property="id" />
+      <result column="coupon_sn" jdbcType="VARCHAR" property="couponSn" />
+      <result column="use_type" jdbcType="CHAR" property="useType" />
+      <result column="use_time" jdbcType="TIMESTAMP" property="useTime" />
+      <result column="use_user" jdbcType="VARCHAR" property="useUser" />
+      <result column="order_code" jdbcType="VARCHAR" property="orderCode" />
+      <result column="memo" jdbcType="VARCHAR" property="memo" />
+    </resultMap>
+
+    <select id="queryObject" resultType="com.dms.api.modules.entity.reserve.coupons.CouponUseLogs">
+        select
+          *
+        from
+          coupon_use_logs
+        where
+          id = #{id}
+    </select>
+
+    <select id="queryList" resultType="com.dms.api.modules.entity.reserve.coupons.CouponUseLogs">
+        select
+          *
+        from
+          coupon_use_logs
+        <where>
+          <if test="couponSn != null and couponSn.trim() != '' ">
+            and coupon_sn = #{couponSn}
+          </if>
+          <if test="useType != null and useType.trim() != '' ">
+            and use_type = #{couponType}
+          </if>
+          <if test="orderCode != null and orderCode.trim() != '' ">
+            and order_code = #{orderCode}
+          </if>
+        </where>
+        <choose>
+          <when test="sidx != null and sidx.trim() != ''">
+            order by ${sidx} ${order}
+          </when>
+          <otherwise>
+            order by id desc
+          </otherwise>
+        </choose>
+        <if test="offset != null and limit != null">
+          limit #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="queryTotal" resultType="int">
+        select
+          count(*)
+        from
+          coupon_use_logs
+        <where>
+          <if test="couponSn != null and couponSn.trim() != '' ">
+            and coupon_sn = #{couponSn}
+          </if>
+          <if test="useType != null and useType.trim() != '' ">
+            and use_type = #{couponType}
+          </if>
+          <if test="orderCode != null and orderCode.trim() != '' ">
+            and order_code = #{orderCode}
+          </if>
+        </where>
+    </select>
+
+    <insert id="saveBatch" parameterType="java.util.List">
+          insert into coupon_use_logs
+          (
+            `coupon_sn`,
+            `use_type`,
+            `use_time`,
+            `use_user`,
+            `order_code`,
+            `memo`
+          )
+          values
+        <foreach collection="list" item="item" separator=",">
+          (
+            #{item.couponSn},
+            #{item.useType},
+            #{item.useTime},
+            #{item.useUser},
+            #{item.orderCode},
+            #{item.memo}
+          )
+        </foreach>
+      </insert>
+
+    <update id="update" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponUseLogs">
+        update coupon_use_logs
+        <set>
+          <if test="couponSn != null">`coupon_sn` = #{couponSn}, </if>
+          <if test="useType != null">`use_type` = #{useType}, </if>
+          <if test="useTime != null">`use_time` = #{useTime}, </if>
+          <if test="useUser != null">`use_user` = #{useUser}, </if>
+          <if test="orderCode != null">`order_code` = #{orderCode}, </if>
+          <if test="memo != null">`memo` = #{memo}, </if>
+        </set>
+        where
+        id = #{id}
+    </update>
+
+    <delete id="delete">
+        delete from coupon_use_logs where id = #{id}
+    </delete>
+
+    <delete id="deleteBatch">
+        delete from coupon_use_logs where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+          #{id}
+        </foreach>
+    </delete>
+
+
+
+    <insert id="insertBatchCouponUseLogs" parameterType="java.util.List">
+        insert into coupon_use_logs
+        (coupon_sn,use_type,use_time,use_user,order_code)
+        VALUES
+        <foreach collection="list" item="log" separator=",">
+            (#{log.couponSn},#{log.useType},now(),#{log.useUser},#{log.orderCode})
+        </foreach>
+    </insert>
+
+
+</mapper>

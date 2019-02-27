@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dms.api.modules.dao.reserve.level.SysLevelinfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.dms.api.modules.entity.reserve.level.SysLevelinfoEntity" id="sysLevelinfoMap">
+		<result property="id" column="id"/>
+		<result property="levelcode" column="levelCode"/>
+		<result property="levelname" column="levelName"/>
+		<result property="applyed" column="applyed"/>
+		<result property="flag" column="flag"/>
+		<result property="moneyrequire" column="moneyRequire"/>
+		<result property="holdorderrequire" column="holdOrderRequire"/>
+		<result property="maxorderau" column="maxOrderAu"/>
+		<result property="maxorderag" column="maxOrderAg"/>
+		<result property="maxoneau" column="maxOneAu"/>
+		<result property="maxoneag" column="maxOneAg"/>
+		<result property="createtime" column="createTime"/>
+		<result property="updatetime" column="updateTime"/>
+		<result property="remarks" column="remarks"/>
+	</resultMap>
+
+	<select id="queryObject" resultType="com.dms.api.modules.entity.reserve.level.SysLevelinfoEntity">
+		select * from sys_levelinfo where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.dms.api.modules.entity.reserve.level.SysLevelinfoEntity">
+		select * from sys_levelinfo
+		<where>
+			<if test="level !=null and level.trim() != '' ">
+				and levelCode=#{level}
+			</if>
+			<if test="applyed !=null and applyed.trim() != '' ">
+				and applyed=#{applyed}
+			</if>
+			<if test="status !=null and status.trim() != '' ">
+				and flag=#{status}
+			</if>
+		</where>
+		<choose>
+			<when test="sidx != null and sidx.trim() != ''">
+				order by ${sidx} ${order}
+			</when>
+			<otherwise>
+				order by id desc
+			</otherwise>
+		</choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+
+	<select id="queryTotal" resultType="int">
+		select count(*) from sys_levelinfo
+		<where>
+			<if test="level !=null and level.trim() != '' ">
+				and levelCode=#{level}
+			</if>
+			<if test="applyed !=null and applyed.trim() != '' ">
+				and applyed=#{applyed}
+			</if>
+			<if test="status !=null and status.trim() != '' ">
+				and flag=#{status}
+			</if>
+		</where>
+	</select>
+
+	<insert id="save" parameterType="com.dms.api.modules.entity.reserve.level.SysLevelinfoEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into sys_levelinfo
+		(
+			`levelCode`, 
+			`levelName`, 
+			`applyed`, 
+			`flag`, 
+			`moneyRequire`, 
+			`holdOrderRequire`, 
+			`maxOrderAu`, 
+			`maxOrderAg`, 
+			`maxOneAu`, 
+			`maxOneAg`,
+			`createTime`,
+			`updateTime`,
+			`remarks`,
+			`isDefault`
+		)
+		values
+		(
+			#{levelcode},
+			#{levelname},
+			#{applyed},
+			#{flag},
+			#{moneyrequire},
+			#{holdorderrequire},
+			#{maxorderau},
+			#{maxorderag},
+			#{maxoneau},
+			#{maxoneag},
+			#{createtime},
+			#{updatetime},
+			#{remarks},
+			#{isDefault}
+		)
+	</insert>
+
+	<update id="update" parameterType="com.dms.api.modules.entity.reserve.level.SysLevelinfoEntity">
+		update sys_levelinfo
+		<set>
+			<if test="levelcode != null">`levelCode` = #{levelcode}, </if>
+			<if test="levelname != null">`levelName` = #{levelname}, </if>
+			<if test="applyed != null">`applyed` = #{applyed}, </if>
+			<if test="flag != null">`flag` = #{flag}, </if>
+			<if test="moneyrequire != null">`moneyRequire` = #{moneyrequire}, </if>
+			<if test="holdorderrequire != null">`holdOrderRequire` = #{holdorderrequire}, </if>
+			<if test="maxorderau != null">`maxOrderAu` = #{maxorderau}, </if>
+			<if test="maxorderag != null">`maxOrderAg` = #{maxorderag}, </if>
+			<if test="maxoneau != null">`maxOneAu` = #{maxoneau}, </if>
+			<if test="maxoneag != null">`maxOneAg` = #{maxoneag}, </if>
+			<if test="createtime != null">`createTime` = #{createtime}, </if>
+			<if test="updatetime != null">`updateTime` = #{updatetime}, </if>
+			<if test="remarks != null">`remarks` = #{remarks}, </if>
+			<if test="isDefault != null">`isDefault` = #{isDefault}</if>
+		</set>
+		where id = #{id}
+	</update>
+
+	<delete id="delete">
+		delete from sys_levelinfo where id = #{value}
+	</delete>
+
+	<delete id="deleteBatch">
+		delete from sys_levelinfo where id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+	<update id="updateDfaultLevel">
+		 update sys_levelinfo set isDefault='N' where levelcode !=#{levelcode}
+	</update>
+
+	<select id="getDefaultLevel" resultType="com.dms.api.modules.entity.reserve.level.SysLevelinfoEntity">
+		 select * from sys_levelinfo s where s.isDefault='Y'
+	</select>
+
+	<select id="getCycleIdsByIds" resultType="java.lang.String">
+		select
+		  GROUP_CONCAT(slc.id) ids
+		from
+            sys_levelinfo sl,
+            sys_levelinfo_cycle slc
+		where
+		  sl.levelCode = slc.levelCode
+		and sl.id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</select>
+
+</mapper>

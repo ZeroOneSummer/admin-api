@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.reserve.coupons.CouponAmountlogDao">
+
+    <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.reserve.coupons.CouponAmountlog">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="coupon_sn" jdbcType="VARCHAR" property="couponSn" />
+        <result column="am_change" jdbcType="DECIMAL" property="amChange" />
+        <result column="active_type" jdbcType="CHAR" property="activeType" />
+        <result column="order_code" jdbcType="VARCHAR" property="orderCode" />
+        <result column="type" jdbcType="INTEGER" property="type" />
+        <result column="am_before" jdbcType="DECIMAL" property="amBefore" />
+        <result column="am_after" jdbcType="DECIMAL" property="amAfter" />
+        <result column="acc_id" jdbcType="INTEGER" property="accId" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="remarks" jdbcType="VARCHAR" property="remarks" />
+    </resultMap>
+
+    <insert id="save" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponAmountlog">
+        insert into coupon_warehouse
+        (
+          `coupon_sn`,
+          `am_change`,
+          `active_type`,
+          `order_code`,
+          `type`,
+          `am_before`,
+          `am_after`,
+          `acc_id`,
+          `remarks`
+        )
+        values
+        (
+          #{couponSn},
+          #{amChange},
+          #{activeType},
+          #{orderCode},
+          #{type},
+          #{amBefore},
+          #{amAfter},
+          #{accId},
+          #{remarks}
+        )
+      </insert>
+
+    <insert id="insertData" parameterType="java.util.Map">
+       INSERT INTO coupon_amountlog
+       (
+	      `coupon_sn`,
+	      `am_change`,
+	      `type`,
+	      `src_accid`,
+	      `create_time`,
+	      `complete_date`,
+	      `status`,
+	      `remark`
+	    )
+      VALUES
+	  (
+		#{coupon_sn},
+		#{am_change},
+		#{type},
+		#{src_accid},
+		#{create_time},
+		#{complete_date},
+		#{status},
+		#{remark}
+	  );
+    </insert>
+
+    <!--
+    <select id="queryCouponSnNumber" parameterType="java.lang.String" resultType="int">
+        SELECT
+	      count(coupon_sn_number) AS couponNumber
+        FROM
+	    (
+		SELECT
+			count(ca.coupon_sn) AS coupon_sn_number
+		FROM
+			coupon_amountlog ca
+		WHERE
+			ca.type IN ("C003", "C004", "C005")
+		AND LEFT (ca.coupon_sn, 18) = #{couponNo}
+		GROUP BY
+			ca.coupon_sn
+	     ) countnumber;
+    </select>
+     -->
+
+    <!--统计批次号券的过期数量 -->
+    <select id="queryCouponsExpired" parameterType="java.lang.String" resultType="int">
+        SELECT
+          count(ca.coupon_sn)
+        FROM
+	    coupon_amountlog ca
+        WHERE
+	      ca.type = "C004"
+       AND LEFT (ca.coupon_sn, 18) = #{couponNo};
+    </select>
+
+    <!--统计批次号券的使用数量  -->
+    <select id="queryUseCoupons" parameterType="java.lang.String" resultType="int">
+        SELECT
+          count(ca.coupon_sn)
+        FROM
+	    coupon_amountlog ca
+        WHERE
+	      ca.type IN ("C003", "C005")
+       AND LEFT (ca.coupon_sn, 18) = #{couponNo};
+    </select>
+
+    <!--统计批次号券的全部结余数量  -->
+    <select id="queryBalanceCoupons" parameterType="java.lang.String" resultType="int">
+        SELECT
+          count(ca.coupon_sn)
+        FROM
+	    coupon_amountlog ca
+        WHERE
+	      ca.type = "C005"
+       AND LEFT (ca.coupon_sn, 18) = #{couponNo};
+    </select>
+
+    <!--统计批次号券的全部零钱数量  -->
+    <select id="queryPocketCoupons" parameterType="java.lang.String" resultType="int">
+        SELECT
+          count(ca.coupon_sn)
+        FROM
+	    coupon_amountlog ca
+        WHERE
+	      ca.type = "C003"
+       AND LEFT (ca.coupon_sn, 18) = #{couponNo};
+    </select>
+
+    <!-- 查询该批次号券的全部序列号
+    <select id="queryBalanceCouponSn" resultType="java.util.Map">
+        SELECT
+          ca.coupon_sn
+        FROM
+	    coupon_amountlog ca
+        WHERE
+	      ca.type = "C005"
+       AND LEFT (ca.coupon_sn, 18) = #{couponNo};
+    </select>
+    -->
+
+
+</mapper>

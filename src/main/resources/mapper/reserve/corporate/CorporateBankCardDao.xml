@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.reserve.corporate.CorporateBankCardDao">
+
+
+	<select id="getOrgCodes" resultType="java.util.Map">
+		SELECT
+		org.org_id as orgId,
+		org.org_name as orgName,
+		org.org_code as orgCode,
+		info.pay_id as userUid,
+		info.login_code AS loginCode
+		FROM
+		bm_sys_organization org,
+		bm_user_infoBrief info,
+		bm_user_account acc
+		where
+		org.org_id = info.org_id
+		<![CDATA[and org.org_id <> -1]]>
+		and info.user_id = acc.user_id
+		and acc.acc_type in(3,4,5)
+		<if test="orgId != null">
+			and org.org_id = #{orgId}
+		</if>
+	</select>
+
+</mapper>

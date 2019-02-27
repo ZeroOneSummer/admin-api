@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.reserve.coupons.CouponDetailDao">
+
+  <!-- 结果集 -->
+  <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.reserve.coupons.CouponDetail">
+      <id column="id" jdbcType="INTEGER" property="id" />
+      <result column="coupon_no" jdbcType="VARCHAR" property="couponNo" />
+      <result column="coupon_name" jdbcType="VARCHAR" property="couponName" />
+      <result column="status" jdbcType="INTEGER" property="status" />
+      <result column="coupon_type" jdbcType="CHAR" property="couponType" />
+      <result column="dealer_code" jdbcType="VARCHAR" property="dealerCode" />
+      <result column="total_price" jdbcType="DECIMAL" property="totalPrice" />
+      <result column="price" jdbcType="DECIMAL" property="price" />
+      <result column="full_price" jdbcType="DECIMAL" property="fullPrice" />
+      <result column="start_date" jdbcType="DATE" property="startDate" />
+      <result column="end_date" jdbcType="DATE" property="endDate" />
+      <result column="coupon_number" jdbcType="INTEGER" property="couponNumber" />
+      <result column="message_type" jdbcType="CHAR" property="messageType" />
+      <result column="photo" jdbcType="VARCHAR" property="photo" />
+      <result column="description" jdbcType="VARCHAR" property="description" />
+      <result column="obtain_type" jdbcType="CHAR" property="obtainType" />
+      <result column="obtain_limit" jdbcType="INTEGER" property="obtainLimit" />
+      <result column="send_type" jdbcType="VARCHAR" property="sendType" />
+      <result column="get_type" jdbcType="VARCHAR" property="getType" />
+      <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+      <result column="create_user" jdbcType="VARCHAR" property="createUser" />
+      <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+      <result column="update_user" jdbcType="VARCHAR" property="updateUser" />
+      <result column="dealer_name" jdbcType="VARCHAR" property="dealerName" />
+  </resultMap>
+
+  <select id="queryObject" resultType="com.dms.api.modules.entity.reserve.coupons.CouponDetail">
+      select
+        bdi.dealer_name,
+        d.*
+      from
+        coupon_detail d,
+        bm_dealer_info bdi
+      where
+        d.dealer_id = bdi.dealer_id
+        and d.id = #{id}
+  </select>
+
+    <select id="queryCouponNo" resultType="com.dms.api.modules.entity.reserve.coupons.CouponDetail">
+        select
+        *
+        from
+        coupon_detail
+        <where>
+            coupon_no = #{couponNo}
+        </where>
+
+    </select>
+
+  <select id="queryList" resultType="com.dms.api.modules.entity.reserve.coupons.CouponDetail">
+      select
+        *
+      from
+        coupon_detail
+      <where>
+        <if test="status != null and status.trim() != '' ">
+          and status = #{status}
+        </if>
+        <if test="couponNo != null and couponNo.trim() != '' ">
+          and coupon_no = #{couponNo}
+        </if>
+        <if test="couponType != null and couponType.trim() != '' ">
+          and coupon_type = #{couponType}
+        </if>
+        <if test="dealerId != null and dealerId.trim() != '' ">
+          and dealer_id = #{dealerId}
+        </if>
+      </where>
+      <choose>
+        <when test="sidx != null and sidx.trim() != ''">
+          order by ${sidx} ${order}
+        </when>
+        <otherwise>
+          order by id desc
+        </otherwise>
+      </choose>
+      <if test="offset != null and limit != null">
+        limit #{offset}, #{limit}
+      </if>
+  </select>
+
+  <select id="queryTotal" resultType="int">
+       select
+          count(*)
+       from
+          coupon_detail
+       <where>
+          <if test="status != null and status.trim() != '' ">
+              and status = #{status}
+          </if>
+          <if test="couponNo != null and couponNo.trim() != '' ">
+              and coupon_no = #{couponNo}
+          </if>
+          <if test="couponType != null and couponType.trim() != '' ">
+              and coupon_type = #{couponType}
+          </if>
+          <if test="dealerId != null and dealerId.trim() != '' ">
+              and dealer_id = #{dealerId}
+          </if>
+       </where>
+  </select>
+
+  <insert id="save" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponDetail">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            select last_insert_id() as id
+        </selectKey>
+		insert into coupon_detail
+		(
+			`coupon_no`,
+			`coupon_name`,
+			`status`,
+			`coupon_type`,
+			`dealer_id`,
+			`total_price`,
+			`price`,
+			`full_price`,
+			`start_date`,
+			`end_date`,
+            `coupon_get_invalid_day`,
+			`coupon_number`,
+			`message_type`,
+			`photo`,
+			`description`,
+			`obtain_type`,
+			`obtain_limit`,
+			`send_type`,
+			`get_type`,
+			`create_time`,
+			`create_user`,
+			`update_time`,
+			`update_user`
+		)
+		values
+		(
+			#{couponNo},
+			#{couponName},
+			#{status},
+			#{couponType},
+			#{dealerId},
+			#{totalPrice},
+			#{price},
+			#{fullPrice},
+			#{startDate},
+			#{endDate},
+            #{couponGetInvalidDay},
+			#{couponNumber},
+			#{messageType},
+			#{photo},
+			#{description},
+			#{obtainType},
+			#{obtainLimit},
+			#{sendType},
+			#{getType},
+			#{createTime},
+			#{createUser},
+			#{updateTime},
+			#{updateUser}
+	    )
+	</insert>
+
+  <update id="update" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponDetail">
+    update coupon_detail
+    <set>
+        <if test="couponNo != null">`coupon_no` = #{couponNo}, </if>
+        <if test="couponName != null">`coupon_name` = #{couponName}, </if>
+        <if test="status != null">`status` = #{status}, </if>
+        <if test="couponType != null">`coupon_type` = #{couponType}, </if>
+        <if test="dealerId != null">`dealer_id` = #{dealerId}, </if>
+        <if test="totalPrice != null">`total_price` = #{totalPrice}, </if>
+        <if test="price != null">`price` = #{price}, </if>
+        <if test="fullPrice != null">`full_price` = #{fullPrice}, </if>
+        <if test="startDate != null">`start_date` = #{startDate}, </if>
+        <if test="endDate != null">`end_date` = #{endDate}, </if>
+        <if test="couponNumber != null">`coupon_number` = #{couponNumber}, </if>
+        <if test="messageType != null">`message_type` = #{messageType}, </if>
+        <if test="photo != null">`photo` = #{photo}, </if>
+        <if test="description != null">`description` = #{description}, </if>
+        <if test="obtainType != null">`obtain_type` = #{obtainType}, </if>
+        <if test="obtainLimit != null">`obtain_limit` = #{obtainLimit}, </if>
+        <if test="sendType != null">`send_type` = #{sendType}, </if>
+        <if test="getType != null">`get_type` = #{getType}, </if>
+        <if test="createTime != null">`create_time` = #{createTime}, </if>
+        <if test="createUser != null">`create_user` = #{createUser}, </if>
+        <if test="updateTime != null">`update_time` = #{updateTime}, </if>
+        <if test="updateUser != null">`update_user` = #{updateUser}</if>
+    </set>
+    where
+      id = #{id}
+  </update>
+
+    <update id="updateStatus" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponDetail">
+        update
+          coupon_detail
+        <set>
+            <if test="couponName != null">`coupon_name` = #{couponName}, </if>
+            <if test="status != null">`status` = #{status}, </if>
+            <if test="couponType != null">`coupon_type` = #{couponType}, </if>
+            <if test="dealerId != null">`dealer_id` = #{dealerId}, </if>
+            <if test="totalPrice != null">`total_price` = #{totalPrice}, </if>
+            <if test="price != null">`price` = #{price}, </if>
+            <if test="fullPrice != null">`full_price` = #{fullPrice}, </if>
+            <if test="startDate != null">`start_date` = #{startDate}, </if>
+            <if test="endDate != null">`end_date` = #{endDate}, </if>
+            <if test="couponNumber != null">`coupon_number` = #{couponNumber}, </if>
+            <if test="messageType != null">`message_type` = #{messageType}, </if>
+            <if test="photo != null">`photo` = #{photo}, </if>
+            <if test="description != null">`description` = #{description}, </if>
+            <if test="obtainType != null">`obtain_type` = #{obtainType}, </if>
+            <if test="obtainLimit != null">`obtain_limit` = #{obtainLimit}, </if>
+            <if test="sendType != null">`send_type` = #{sendType}, </if>
+            <if test="getType != null">`get_type` = #{getType}, </if>
+            <if test="createTime != null">`create_time` = #{createTime}, </if>
+            <if test="createUser != null">`create_user` = #{createUser}, </if>
+            <if test="updateTime != null">`update_time` = #{updateTime}, </if>
+            <if test="updateUser != null">`update_user` = #{updateUser}</if>
+        </set>
+        where
+          coupon_no = #{couponNo}
+    </update>
+
+
+    <update id="updateVerifyStatus" parameterType="com.dms.api.modules.entity.reserve.coupons.CouponDetail">
+        update
+        coupon_detail
+        <set>
+            <if test="couponName != null">`coupon_name` = #{couponName}, </if>
+            <if test="status != null">`status` = #{status}, </if>
+            <if test="couponType != null">`coupon_type` = #{couponType}, </if>
+            <if test="dealerId != null">`dealer_id` = #{dealerId}, </if>
+            <if test="totalPrice != null">`total_price` = #{totalPrice}, </if>
+            <if test="price != null">`price` = #{price}, </if>
+            <if test="fullPrice != null">`full_price` = #{fullPrice}, </if>
+            <if test="startDate != null">`start_date` = #{startDate}, </if>
+            <if test="endDate != null">`end_date` = #{endDate}, </if>
+            <if test="couponNumber != null">`coupon_number` = #{couponNumber}, </if>
+            <if test="messageType != null">`message_type` = #{messageType}, </if>
+            <if test="photo != null">`photo` = #{photo}, </if>
+            <if test="description != null">`description` = #{description}, </if>
+            <if test="obtainType != null">`obtain_type` = #{obtainType}, </if>
+            <if test="obtainLimit != null">`obtain_limit` = #{obtainLimit}, </if>
+            <if test="sendType != null">`send_type` = #{sendType}, </if>
+            <if test="getType != null">`get_type` = #{getType}, </if>
+            <if test="createTime != null">`create_time` = #{createTime}, </if>
+            <if test="createUser != null">`create_user` = #{createUser}, </if>
+            <if test="updateTime != null">`update_time` = #{updateTime}, </if>
+            <if test="updateUser != null">`update_user` = #{updateUser}</if>
+        </set>
+        where
+        coupon_no = #{couponNo} and status in ('0.3','-0.5')
+    </update>
+
+
+
+  <delete id="delete">
+	  delete from coupon_detail where id = #{id}
+  </delete>
+
+  <delete id="deleteBatch">
+        delete from coupon_detail where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+          #{id}
+        </foreach>
+  </delete>
+
+  <select id="getWarehouseIdsByIds" resultType="java.lang.String">
+        select
+          GROUP_CONCAT(cw.id) ids
+        from
+          coupon_detail cd,
+          coupon_warehouse cw
+        where
+          cd.coupon_no = cw.coupon_no
+        and cd.id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+  </select>
+
+  <select id="getConditionIdsByIds" resultType="java.lang.String">
+        select
+          GROUP_CONCAT(cc.id) ids
+        from
+          coupon_detail cd,
+          coupon_condition cc
+        where
+          cd.coupon_no = cc.coupon_no
+        and cd.id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+  </select>
+
+  <select id="getLoginCodeByDealerId" parameterType="java.lang.String" resultType="map">
+        SELECT
+            bua.acc_id as accId,
+            bui.login_code as loginCode,
+            bua.dealer_id as dealerId
+        FROM
+            bm_user_account bua,
+            bm_user_infoBrief bui
+        WHERE
+            bua.user_id = bui.user_id
+        AND bua.acc_type = '5'
+        AND bua.dealer_id = #{dealerId} limit 1
+  </select>
+
+
+
+    <!--找出 符合 指定服务商 下得loginCode-->
+    <select id="queryDealerLoginCode" resultType="com.dms.api.modules.entity.reserve.coupons.CouponLoginCodeCount">
+        select
+            bu.login_code as loginCode,
+			bu.user_name as userName,
+            dealer.dealer_id AS dealerId,
+            dealer.dealer_code as dealerCode,
+            dealer.dealer_name AS dealerName,
+            dealer.dealer_full_name AS dealerFullName
+        FROM
+            bm_user_infoBrief bu,
+            bm_sys_organization org,
+            bm_dealer_info dealer
+        where bu.org_id=org.org_id and org.broker_dealer_id=dealer.dealer_id and dealer.dealer_type='3'
+        and dealer.dealer_id=#{dealerId}
+        and bu.login_code in
+        <foreach item="loginCode" collection="loginCodes" open="(" separator="," close=")">
+            #{loginCode}
+        </foreach>
+
+    </select>
+
+
+    <!--查询符合条件的券-->
+    <select id="userSureReceiveList" resultType="com.dms.api.modules.entity.reserve.coupons.CouponDetail" >
+        select
+            cd.coupon_no as couponNo,
+            cd.coupon_name as couponName,
+            cd.coupon_type as couponType,
+            cd.price as price,
+            cd.full_price as fullPrice,
+            cd.obtain_limit as obtainLimit,
+            cd.start_date as startDate,
+            cd.end_date as endDate,
+            cd.coupon_get_invalid_day as couponGetInvalidDay,
+            cd.photo as photo,
+            cd.description as description,
+            cw.coupon_sn as couponSn
+        from
+
+            coupon_detail cd,
+            coupon_warehouse cw
+        where
+            cd.coupon_no=cw.coupon_no
+
+            and cd.status='1'
+            and cw.use_status=0
+
+            and cd.dealer_id=#{dealerId}
+            and cd.coupon_no=#{couponNo}
+            and cd.obtain_type='2'
+            and cd.send_type='4'
+            <![CDATA[
+            and cd.start_date<=CURDATE() and CURDATE()<=cd.end_date
+            ]]>
+            limit 100
+    </select>
+
+
+    <!--用户领券方法   -->
+    <update id="updateReceiveCoupon">
+        update coupon_warehouse set logincode=#{loginCode},use_status='1',use_time=now(),coupon_use_end_date=#{couponUseEndDate} where coupon_sn=#{couponSn} and use_status='0'
+    </update>
+
+
+    <select id="queryCouponLoginCodeCount" resultType="com.dms.api.modules.entity.reserve.coupons.CouponLoginCodeCount">
+            select
+             logincode,
+             count(*) as count
+            from
+            coupon_warehouse where coupon_no=#{couponNo} and logincode is not null  group by logincode
+    </select>
+
+    <select id="couponIsAudit" resultType="java.lang.String">
+        SELECT
+            STATUS
+        FROM
+            coupon_detail
+        where
+            coupon_no = #{couponNo}
+    </select>
+
+
+    <!-- 查询用户拥有得券 -->
+    <select id="queryUserCoupon" resultType="com.dms.api.modules.entity.reserve.coupons.CouponWarehouse">
+        select
+            d.dealer_code as dealerCode,
+            cw.coupon_sn as couponSn,
+            cw.coupon_no as couponNo,
+            cw.price
+        from coupon_warehouse cw
+            left join coupon_detail cd on cw.coupon_no=cd.coupon_no
+            left join bm_dealer_info d on cd.dealer_id=d.dealer_id
+        where cw.use_status='1'
+        and loginCode=#{loginCode}
+    </select>
+
+
+    <select id="queryDealerCodeBySequence" resultType="java.lang.String">
+        select d.dealer_code from
+            bm_sys_organization org,
+            bm_dealer_info d
+            where org.broker_dealer_id=d.dealer_id
+            and  org.org_sequence=#{orgSequence} limit 1
+    </select>
+
+
+    <!--将券 改为过期-->
+    <update id="updateCouponWarehouseStatus" parameterType="java.util.List">
+        UPDATE coupon_warehouse cw set cw.use_status=#{useStatus} WHERE cw.coupon_sn IN
+        <foreach collection="couponSnList"   item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <insert id="insertBatchCouponUseLogs" parameterType="java.util.List">
+        insert into coupon_use_logs
+        (coupon_sn,use_type,use_time,use_user,order_code)
+        VALUES
+        <foreach collection="list" item="log" separator=",">
+            (#{log.couponSn},#{log.useType},now(),#{log.useUser},#{log.orderCode})
+        </foreach>
+    </insert>
+
+    <!--批量新增券过期 表-->
+    <insert id="insertBatchCouponOverdue" parameterType="java.util.List">
+        insert into coupon_overdue
+        (type,coupon_sn,overdue_money,has_transfer,cre_date)
+        VALUES
+        <foreach collection ="list" item="item" separator =",">
+            (#{item.type},#{item.couponSn},#{item.overdueMoney},#{item.hasTransfer},now())
+        </foreach >
+    </insert>
+
+
+</mapper>

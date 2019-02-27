@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.report.couponsReport.CouponOrderDao">
+
+  <resultMap id="BaseResultMap" type="com.dms.api.modules.entity.report.couponsReport.CouponOrder">
+    <result column="dealer_code" property="dealerCode" />
+    <result column="login_code" property="loginCode" />
+    <result column="coupon_sn" property="couponSn" />
+    <result column="order_no" property="orderNo" />
+    <result column="order_close_no" property="orderCloseNo" />
+    <result column="coupon_type" property="couponType" />
+    <result column="order_money" property="orderMoney" />
+    <result column="order_coupon_money"  property="orderCouponMoney" />
+    <result column="profit_close" property="profitClose" />
+    <result column="profit_close_sub" property="profitCloseSub" />
+    <result column="return_money" property="returnMoney" />
+    <result column="price"  property="price" />
+    <result column="charge_open"  property="chargeOpen" />
+    <result column="extra_charge" property="extraCharge" />
+    <result column="cre_date" property="creDate" />
+    <result column="transfer_count" property="transferCount" />
+    <result column="transfer_date" property="transferDate" />
+  </resultMap>
+
+  <select id="queryList" resultMap="BaseResultMap">
+
+      select
+        bd.dealer_code,
+        co.login_code,
+        co.coupon_sn,
+        co.order_no,
+        co.order_close_no,
+        co.coupon_type,
+        co.order_money,
+        co.order_coupon_money,
+        IF(co.profit_close>=0,co.profit_close,0) as profit_close,
+        IF(co.profit_close&lt;0,co.profit_close,0) as profit_close_sub,
+        co.return_money,
+        cw.price,
+        bo.charge_open,
+        bo.extra_charge,
+        co.cre_date,
+        co.transfer_count,
+        co.transfer_date
+      from
+        coupon_order co,
+        bm_trade_order bo,
+        coupon_warehouse cw,
+        coupon_detail cd,
+        bm_dealer_info bd
+      where
+        co.order_no = bo.order_code
+        AND co.coupon_sn = cw.coupon_sn
+        AND cw.coupon_no = cd.coupon_no
+        AND cd.dealer_id = bd.dealer_id
+        <if test="dealerId != null and dealerId != ''">
+          AND bd.dealer_id = #{dealerId}
+        </if>
+        <if test="orderNo != null and orderNo != ''">
+          AND co.order_no = #{orderNo}
+        </if>
+        <if test="startTime != null">
+          AND co.cre_date >= #{startTime}
+        </if>
+        <if test="endTime != null">
+          AND co.cre_date &lt;= DATE_ADD(#{endTime},INTERVAL 8 HOUR)
+        </if>
+        <if test="loginCode != null and loginCode != ''">
+          AND co.login_code = #{loginCode}
+        </if>
+        <if test="dealerCode != null and dealerCode != ''">
+          AND bd.dealer_code = #{dealerCode}
+        </if>
+
+      <choose>
+        <when test="sidx != null and sidx.trim() != ''">
+          order by ${sidx} ${order}
+        </when>
+        <otherwise>
+          order by co.cre_date desc
+        </otherwise>
+      </choose>
+
+  </select>
+
+</mapper>

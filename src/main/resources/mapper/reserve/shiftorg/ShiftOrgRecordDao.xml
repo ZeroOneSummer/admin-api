@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dms.api.modules.dao.reserve.shiftorg.ShiftOrgRecordDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.dms.api.modules.entity.reserve.shiftorg.ShiftOrgRecordEntity" id="shiftOrgRecordMap">
+        <result property="id" column="id"/>
+        <result property="loginCode" column="login_code"/>
+        <result property="userName" column="user_name"/>
+        <result property="phoneNumber" column="phone_number"/>
+        <result property="srcOrgCode" column="src_org_code"/>
+        <result property="tarOrgCode" column="tar_org_code"/>
+        <result property="serialCode" column="serial_code"/>
+        <result property="createTime" column="create_time"/>
+        <result property="shiftTime" column="shift_time"/>
+        <result property="status" column="status"/>
+        <result property="remarks" column="remarks"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.dms.api.modules.entity.reserve.shiftorg.ShiftOrgRecordEntity">
+		select * from user_orgshift_logs where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.dms.api.modules.entity.reserve.shiftorg.ShiftOrgRecordEntity">
+		select d.id,v.id as vId,d.login_code,d.user_name,d.src_org_code,d.tar_org_code,d.login_code,d.shift_time,v.verify_time as create_time,d.status,d.remarks
+		from user_orgshift_logs d ,verify_record v
+		where
+		d.id = v.refer_id
+		AND v.refer_type = 'SHIFT_ORG'
+		AND v.status = 99
+		<if test="shiftTime != null">
+			AND d.shift_time = #{shiftTime}
+		</if>
+		<if test="srcOrgCode != null and srcOrgCode != ''">
+			AND d.src_org_code LIKE concat('%',#{srcOrgCode},'%')
+		</if>
+		<if test="tarOrgCode != null and tarOrgCode != ''">
+			AND d.tar_org_code LIKE concat('%',#{tarOrgCode},'%')
+		</if>
+		<if test="loginCode != null and loginCode != ''">
+			AND d.login_code = #{loginCode}
+		</if>
+		<if test="status != null and status != ''">
+			AND d.status = #{status}
+		</if>
+		<if test="startTime != null and startTime != ''">
+			AND v.verify_time &gt;= #{startTime}
+		</if>
+		<if test="endTime != null and endTime != ''">
+			AND v.verify_time &lt;= #{endTime}
+		</if>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by d.id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+
+	<select id="queryVerifyList" resultType="com.dms.api.modules.entity.reserve.shiftorg.ShiftOrgVerifyEntity">
+		SELECT
+		s.id AS shift_id,
+		s.login_code,
+		s.user_name,
+		s.src_org_code,
+		s.tar_org_code,
+		s.create_time,
+		v.id,
+		v.verify_time,
+		v.`status`,
+		v.remark
+		FROM
+		`user_orgshift_logs` s,
+		verify_record v
+		WHERE
+		s.id = v.refer_id
+		AND v.refer_type = 'SHIFT_ORG'
+		<if test="status != null and status != ''">
+			AND v.status = #{status}
+		</if>
+		<if test="startTime != null and startTime != ''">
+			AND create_time &gt;= #{startTime}
+		</if>
+		<if test="endTime != null and endTime != ''">
+			AND create_time &lt;= #{endTime}
+		</if>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by s.id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+
+	<select id="queryVerifyTotal" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM
+		`user_orgshift_logs` s,
+		verify_record v
+		WHERE
+		s.id = v.refer_id
+		AND v.refer_type = 'SHIFT_ORG'
+		<if test="status != null and status != ''">
+			AND v.status = #{status}
+		</if>
+		<if test="startTime != null and startTime != ''">
+			AND create_time &gt;= #{startTime}
+		</if>
+		<if test="endTime != null and endTime != ''">
+			AND create_time &lt;= #{endTime}
+		</if>
+	</select>
+
+	<select id="queryShiftList" resultType="com.dms.api.modules.entity.reserve.shiftorg.ShiftOrgRecordEntity">
+		select d.id ,d.login_code ,d.serial_code from user_orgshift_logs d ,verify_record v
+		where
+		d.status = 0
+		AND d.id = v.refer_id
+		AND v.refer_type = 'SHIFT_ORG'
+		AND v.status = 99
+		ORDER BY id ASC
+	</select>
+
+	<select id="checkRepeat" resultType="com.dms.api.modules.entity.reserve.shiftorg.ShiftOrgRecordEntity">
+		select login_code from user_orgshift_logs
+		where
+		shift_time = #{record.shiftTime}
+		AND login_code in
+		<foreach collection="list" item="record" index="index" open="(" separator="," close=")">
+			#{record.loginCode}
+		</foreach>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from user_orgshift_logs d ,verify_record v
+		where
+		d.id = v.refer_id
+		AND v.refer_type = 'SHIFT_ORG'
+		AND v.status = 99
+		<if test="shiftTime != null">
+			AND d.shift_time = #{shiftTime}
+		</if>
+		<if test="srcOrgCode != null and srcOrgCode != ''">
+			AND d.src_org_code LIKE concat('%',#{srcOrgCode},'%')
+		</if>
+		<if test="tarOrgCode != null and tarOrgCode != ''">
+			AND d.tar_org_code LIKE concat('%',#{tarOrgCode},'%')
+		</if>
+		<if test="loginCode != null and loginCode != ''">
+			AND d.login_code = #{loginCode}
+		</if>
+		<if test="status != null and status != ''">
+			AND d.status = #{status}
+		</if>
+		<if test="startTime != null and startTime != ''">
+			AND v.verify_time &gt;= #{startTime}
+		</if>
+		<if test="endTime != null and endTime != ''">
+			AND v.verify_time &lt;= #{endTime}
+		</if>
+	</select>
+	 
+	<insert id="save" parameterType="com.dms.api.modules.entity.reserve.shiftorg.ShiftOrgRecordEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into user_orgshift_logs
+		(
+			`login_code`, 
+			`serial_code`, 
+			`create_time`, 
+			`shift_time`, 
+			`status`, 
+			`remarks`
+		)
+		values
+		(
+			#{loginCode}, 
+			#{serialCode}, 
+			#{createTime}, 
+			#{shiftTime}, 
+			#{status}, 
+			#{remarks}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.dms.api.modules.entity.reserve.shiftorg.ShiftOrgRecordEntity">
+		update user_orgshift_logs
+		<set>
+			<if test="loginCode != null">`login_code` = #{loginCode}, </if>
+			<if test="serialCode != null">`serial_code` = #{serialCode}, </if>
+			<if test="createTime != null">`create_time` = #{createTime}, </if>
+			<if test="shiftTime != null">`shift_time` = #{shiftTime}, </if>
+			<if test="status != null">`status` = #{status}, </if>
+			<if test="remarks != null">`remarks` = #{remarks}</if>
+		</set>
+		where id = #{id}
+	</update>
+
+	<update id="updateBatch" parameterType="com.dms.api.modules.entity.reserve.shiftorg.ShiftOrgRecordEntity">
+		<foreach collection="list" item="item" index="index" open="" close="" separator=";">
+			update user_orgshift_logs
+			<set>
+				<if test="item.loginCode != null">`login_code` = #{item.loginCode}, </if>
+				<if test="item.serialCode != null">`serial_code` = #{item.serialCode}, </if>
+				<if test="item.createTime != null">`create_time` = #{item.createTime}, </if>
+				<if test="item.shiftTime != null">`shift_time` = #{item.shiftTime}, </if>
+				<if test="item.status != null">`status` = #{item.status}, </if>
+				<if test="item.remarks != null">`remarks` = #{item.remarks}</if>
+			</set>
+			where id = ${item.id}
+		</foreach>
+	</update>
+
+	<update id="verifyBatch">
+		update user_orgshift_logs
+		<set>
+			<if test="shiftTime != null">`shift_time` = #{shiftTime} </if>
+		</set>
+		where id in
+		<foreach item="id" collection="shiftIds" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</update>
+	
+	<delete id="delete">
+		delete from user_orgshift_logs where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		delete from user_orgshift_logs where id in 
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+	<!--修改审核状态为驳回-->
+	<update id="updateVerifyRecordStatus">
+		update verify_record set status='-1', remark=#{remark} where id=#{vId}
+	</update>
+
+	<insert id="insertBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="referId" >
+		insert into user_orgshift_logs
+		(
+		user_name,
+		phone_number,
+		src_org_code,
+		`login_code`,
+		`serial_code`,
+		tar_org_code
+		)
+		<foreach collection="list" item="record" index="index" separator="UNION ALL">
+			(
+			SELECT
+			#{record.userName},
+			IFNULL(s.phone , 0),
+			s.bm_org_num,s.login_code,
+			#{record.serialCode},
+			o.org_code
+			FROM
+			(SELECT 1) t
+			LEFT JOIN view_bm_users s ON s.user_name = #{record.userName}
+			AND login_code = #{record.loginCode}
+			LEFT JOIN bm_sys_organization o ON o.org_sequence = #{record.serialCode}
+			LIMIT 1
+			)
+		</foreach>
+	</insert>
+
+	<select id="selectInfoByImportParams">
+
+	</select>
+
+	<select id="orderCount" resultType="map">
+	select v.login_code as logincode,t.count as count from view_bm_users v , (
+		select
+			bt.acc_id,COUNT(*) as count
+		from
+			bm_trade_order bt INNER JOIN view_bm_users vb
+		ON vb.acc_id = bt.acc_id
+		where
+
+		vb.login_code in (
+
+		<foreach collection="logincodes" item="item" index="index" open="" close="" separator=",">
+			#{item}
+		</foreach>
+
+		)
+		and
+			date_format(bt.order_time, '%Y-%m-%d %H:%i:%s') >= #{datestr.startTime} and date_format(bt.order_time, '%Y-%m-%d %H:%i:%s') &lt;= #{datestr.endTime}
+		GROUP BY
+			bt.acc_id ) t
+
+	where v.acc_id = t.acc_id
+	</select>
+
+	<!-- 定时转机构 -->
+	<select id="orderCount2" resultType="map">
+
+		select vb.login_code,count(*)  from
+		view_bm_users vb
+		inner join
+		bm_trade_order ordin on vb.acc_id=ordin.acc_id
+		left join
+		bm_trade_order ordout on ordout.order_type!='1' and ordin.order_code=ordout.order_code_re
+		<where>
+			ordin.order_type='1'
+			and date_format(ordin.order_time, '%Y-%m-%d %H:%i:%s') >= #{datestr.startTime} and date_format(ordin.order_time, '%Y-%m-%d %H:%i:%s') &lt;= #{datestr.endTime}
+			<if test="logincodes != null">
+				and vb.login_code in (
+				<foreach collection="logincodes" item="item" index="index" open="" close="" separator=",">
+					#{item}
+				</foreach>
+				)
+			</if>
+			and ordout.order_code_re is null
+			group by vb.login_code
+		</where>
+	</select>
+
+	<select id="getUserOrg" resultType="map">
+		  select
+		  	login_code ,bm_org_num
+		  from
+		  	view_bm_users
+		  where
+		  	login_code in (
+			<foreach collection="list" item="record" index="index" separator=",">
+
+				#{record.loginCode}
+			</foreach>
+			)
+	</select>
+
+	<select id="getTargetOrgSerialCode" resultType="map">
+		SELECT
+			org_code,org_sequence
+		from
+			bm_sys_organization
+		where org_code IN  (
+		<foreach collection="list" item="record" index="index" separator=",">
+
+			#{record.tarOrgCode}
+		</foreach>
+		)
+	</select>
+
+	<select id="getDefaultOrg" resultType="com.dms.api.modules.entity.sys.config.SysConfigEntity">
+		SELECT
+		id,
+		`key`,
+		`value`,
+		`status`,
+		remark,
+		pid
+		FROM
+		sys_config
+		WHERE
+		`key` = 'default_org'
+	</select>
+
+
+</mapper>

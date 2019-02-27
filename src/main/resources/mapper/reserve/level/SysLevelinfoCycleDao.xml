@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dms.api.modules.dao.reserve.level.SysLevelinfoCycleDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.dms.api.modules.entity.reserve.level.SysLevelinfoCycleEntity" id="sysLevelinfoCycleMap">
+        <result property="id" column="id"/>
+        <result property="levelCode" column="levelCode"/>
+        <result property="cycleType" column="cycleType"/>
+        <result property="maxOrderNum" column="maxOrderNum"/>
+        <result property="maxWeightAu" column="maxWeightAu"/>
+        <result property="maxWeightAg" column="maxWeightAg"/>
+        <result property="maxAdvance" column="maxAdvance"/>
+        <result property="maxNetAdvance" column="maxNetAdvance"/>
+        <result property="createTime" column="createTime"/>
+        <result property="updateTime" column="updateTime"/>
+        <result property="remarks" column="remarks"/>
+		<result property="status" column="status"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.dms.api.modules.entity.reserve.level.SysLevelinfoCycleEntity">
+		select * from sys_levelinfo_cycle where id = #{id}
+	</select>
+
+	<select id="queryList" resultType="com.dms.api.modules.entity.reserve.level.SysLevelinfoCycleEntity">
+		select
+			*
+		from
+			sys_levelinfo_cycle
+		where 1 = 1
+		<if test="levelCode != null and levelCode != ''">
+			 and levelCode = #{levelCode}
+		</if>
+		<choose>
+			<when test="sidx != null and sidx.trim() != ''">
+				order by ${sidx} ${sord}
+			</when>
+			<otherwise>
+				order by id asc
+			</otherwise>
+		</choose>
+	</select>
+	 
+	<insert id="save" parameterType="com.dms.api.modules.entity.reserve.level.SysLevelinfoCycleEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into sys_levelinfo_cycle
+		(
+			`levelCode`,
+			`cycleType`,
+			`maxOrderNum`,
+			`maxWeightAu`,
+			`maxWeightAg`,
+			`maxAdvance`,
+			`maxNetAdvance`,
+			`createTime`,
+			`updateTime`,
+			`remarks`,
+			`status`
+		)
+		values
+		(
+			#{levelCode},
+			#{cycleType},
+			#{maxOrderNum},
+			#{maxWeightAu},
+			#{maxWeightAg},
+			#{maxAdvance},
+			#{maxNetAdvance},
+			#{createTime},
+			#{updateTime},
+			#{remarks},
+			#{status}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.dms.api.modules.entity.reserve.level.SysLevelinfoCycleEntity">
+		update sys_levelinfo_cycle
+		<set>
+			<if test="levelCode != null">`levelCode` = #{levelCode}, </if>
+			<if test="cycleType != null">`cycleType` = #{cycleType}, </if>
+			<if test="maxOrderNum != null">`maxOrderNum` = #{maxOrderNum}, </if>
+			<if test="maxWeightAu != null">`maxWeightAu` = #{maxWeightAu}, </if>
+			<if test="maxWeightAg != null">`maxWeightAg` = #{maxWeightAg}, </if>
+			<if test="maxAdvance != null">`maxAdvance` = #{maxAdvance}, </if>
+			<if test="maxNetAdvance != null">`maxNetAdvance` = #{maxNetAdvance}, </if>
+			<if test="createTime != null">`createTime` = #{createTime}, </if>
+			<if test="updateTime != null">`updateTime` = #{updateTime}, </if>
+			<if test="remarks != null">`remarks` = #{remarks}, </if>
+			<if test="status != null">`status` = #{status}, </if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		delete from sys_levelinfo_cycle where id = #{id}
+	</delete>
+	
+	<delete id="deleteBatch">
+		delete from sys_levelinfo_cycle where id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

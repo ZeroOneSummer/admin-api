@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dms.api.modules.dao.report.mallrun.MallRunTaskDao">
+
+
+	<!-- 查询服务商、类型分组列表 -->
+	<select id="queryTypeGroups" resultType="com.dms.api.modules.entity.report.mallrun.MallRunEntity">
+		SELECT
+			dealerCode,
+			`type`
+		FROM
+			mall_run_settlement
+		WHERE
+			timeType = 'D'
+		GROUP BY
+			dealerId,
+			`type`
+	</select>
+
+
+	<!-- 生成结算表数据（综合）  传参：creType[D-日，M-月]，creWay[CURR-当前，ALL-所有]  -->
+    <!--
+        1.服务费、货值增减、提现、充值  日结
+        2.注册用户数量                日结
+        3.实名用户数量                日结
+        4.下单用户数量                日结
+        5.综合月结
+    -->
+	<insert id="createSettlementData">
+		<choose>
+			<when test="creWay == 'CURR'">
+				call mall_run_settlement_day(null,null);
+				call mall_run_settlement_register(null,null);
+				call mall_run_settlement_realname(null,null);
+				call mall_run_settlement_order(null,null);
+				call mall_run_settlement_month(null,null)
+			</when>
+			<when test="creWay == 'ALL'">
+				call mall_run_settlement_day(#{sTime},#{eTime});
+				call mall_run_settlement_register(#{sTime},#{eTime});
+				call mall_run_settlement_realname(#{sTime},#{eTime});
+				call mall_run_settlement_order(#{sTime},#{eTime});
+				call mall_run_settlement_month(LEFT(#{sTime},7),LEFT(DATE_SUB(#{eTime},INTERVAL 1 MONTH),7))
+			</when>
+		</choose>
+	</insert>
+
+	<!-- 清空结算表数据（所有） -->
+	<delete id="delSettlementData">
+		truncate table mall_run_settlement;
+	</delete>
+
+
+
+	<!-- ************ 以下为累计结算 ************   -->
+
+
+	<!-- 生成结算累计表数据（综合）  传参：timeType[D-日，M-月]、type、dealerCode, creWay[CURR-当前]-->
+	<insert id="createSettlementDataTotal">
+		INSERT IGNORE INTO mall_run_settlement_total
+		(
+			dealerId,
+			dealerCode,
+			`type`,
+			timeType,
+			price,
+			accumPrice,
+			traDay,
+			traMon
+		)
+		SELECT
+			dealerId,
+			dealerCode,
+			`type`,
+			timeType,
+			price,
+			(
+				SELECT
+					SUM(price)
+				FROM
+					mall_run_settlement AS sett1
+				WHERE
+					`type` = #{type}
+					AND dealerCode = #{dealerCode}
+					<if test="timeType == 'Day'">
+						AND sett1.traDay &lt;= sett2.traDay
+						AND sett1.traDay >= CONCAT(left(sett2.traDay,8),'01')
+					</if>
+					<if test="timeType == 'Mon'">
+						AND sett1.traMon &lt;= sett2.traMon
+						AND sett1.traMon >= CONCAT(left(sett2.traMon,5),'01')
+					</if>
+			) AS accumPrice,
+			traDay,
+			traMon
+		FROM
+			mall_run_settlement AS sett2
+		WHERE
+			timeType = LEFT(#{timeType},1)
+			AND `type` = #{type}
+			AND dealerCode = #{dealerCode}
+		<if test="creWay == 'CURR'">
+			order by
+				<if test="timeType == 'Day'">traDay</if>
+				<if test="timeType == 'Mon'">traMon</if>
+			desc limit 1
+		</if>
+	</insert>
+
+	<!-- 清空结算累计表数据（所有） -->
+	<delete id="delSettlementDataTotal">
+		truncate table mall_run_settlement_total;
+	</delete>
+
+</mapper>

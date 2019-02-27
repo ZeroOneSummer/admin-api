@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dms.api.modules.dao.mall.order.refund.RefundApplyDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.dms.api.modules.entity.mall.order.refund.RefundApplyEntity" id="refundApplyMap">
+        <result property="id" column="id"/>
+        <result property="orderCode" column="order_code"/>
+        <result property="userName" column="user_name"/>
+        <result property="accId" column="acc_id"/>
+        <result property="orderPrice" column="order_price"/>
+        <result property="refundMoney" column="refund_money"/>
+        <result property="refundBean" column="refund_bean"/>
+        <result property="refundTotal" column="refund_total"/>
+        <result property="applyTime" column="apply_time"/>
+        <result property="remarks" column="remarks"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.dms.api.modules.entity.mall.order.refund.RefundApplyEntity">
+		select * from shop_refund_apply where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.dms.api.modules.entity.mall.order.refund.RefundApplyEntity">
+		select * from shop_refund_apply
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+
+ 	<select id="queryTotal" resultType="int">
+		select COUNT(*) from shop_refund_apply r,verify_record v
+		<where>
+			r.id=v.refer_id
+			and v.refer_type = 'REFUND_APPLY'
+			<if test="type !=null and type !=''">
+				and v.type=#{type}
+			</if>
+			<if test="orderCode !=null and orderCode !=''">
+				and r.order_code=#{orderCode}
+			</if>
+			<if test="userName !=null and userName !=''">
+				and r.user_name like concat('%',#{userName},'%')
+			</if>
+			<if test="status !=null and status !=''">
+				and v.status=#{status}
+			</if>
+			<if test="startTime !=null and startTime !=''">
+				and r.apply_time &gt;=#{startTime}
+			</if>
+			<if test="endTime !=null and endTime !=''">
+				and r.apply_time &lt;= #{endTime}
+			</if>
+		</where>
+	</select>
+
+	<insert id="save" parameterType="com.dms.api.modules.entity.mall.order.refund.RefundApplyEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into shop_refund_apply
+		(
+			`order_code`,
+			`user_name`,
+			`acc_id`,
+			`order_price`,
+			`refund_money`,
+			`refund_bean`,
+			`refund_total`,
+			`apply_time`,
+			`remarks`
+		)
+		values
+		(
+			#{orderCode},
+			#{userName},
+			#{accId},
+			#{orderPrice},
+			#{refundMoney},
+			#{refundBean},
+			#{refundTotal},
+			#{applyTime},
+			#{remarks}
+		)
+	</insert>
+
+	<update id="update" parameterType="com.dms.api.modules.entity.mall.order.refund.RefundApplyEntity">
+		update shop_refund_apply
+		<set>
+			<if test="orderCode != null">`order_code` = #{orderCode}, </if>
+			<if test="userName != null">`user_name` = #{userName}, </if>
+			<if test="accId != null">`acc_id` = #{accId}, </if>
+			<if test="orderPrice != null">`order_price` = #{orderPrice}, </if>
+			<if test="refundMoney != null">`refund_money` = #{refundMoney}, </if>
+			<if test="refundBean != null">`refund_bean` = #{refundBean}, </if>
+			<if test="refundTotal != null">`refund_total` = #{refundTotal}, </if>
+			<if test="applyTime != null">`apply_time` = #{applyTime}, </if>
+			<if test="remarks != null">`remarks` = #{remarks}</if>
+		</set>
+		where id = #{id}
+	</update>
+
+	<delete id="delete">
+		delete from shop_refund_apply where id = #{value}
+	</delete>
+
+	<delete id="deleteBatch">
+		delete from shop_refund_apply where id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+
+	<select id="refundApplyAndVerifyRecordVoList" resultType="com.dms.api.modules.entity.mall.order.refund.RefundApplyAndVerifyRecordVo">
+		select r.id,v.verify_by,(select s.username from sys_user s where s.user_id=v.verify_by)verify_name,v.id v_id,r.order_code,r.user_name,v.type,v.status,v.next_verify,r.order_price,r.refund_money,r.refund_bean,r.refund_total,r.apply_time,v.verify_time,r.remarks from shop_refund_apply r,verify_record v
+		<where>
+			r.id=v.refer_id
+			and v.refer_type = 'REFUND_APPLY'
+			<if test="type !=null and type !=''">
+				and v.type=#{type}
+			</if>
+			<if test="orderCode !=null and orderCode !=''">
+				and r.order_code=#{orderCode}
+			</if>
+			<if test="userName !=null and userName !=''">
+				and r.user_name like concat('%',#{userName},'%')
+			</if>
+			<if test="status !=null and status !=''">
+				and v.status=#{status}
+			</if>
+			<if test="startTime !=null and startTime !=''">
+				and r.apply_time &gt;=#{startTime}
+			</if>
+			<if test="endTime !=null and endTime !=''">
+				and r.apply_time &lt; #{endTime}
+			</if>
+		</where>
+		<choose>
+			<when test="sidx != null and sidx.trim() != ''">
+				order by  ${sidx} ${order}
+			</when>
+			<otherwise>
+				order by r.id desc
+			</otherwise>
+		</choose>
+		<if test="offset != null and limit != null and downLoad != true">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+
+
+	<select id="info" resultType="com.dms.api.modules.entity.mall.order.refund.RefundApplyAndVerifyRecordVo">
+		select r.id,v.verify_by,(select s.username from sys_user s where s.user_id=v.verify_by)verify_name,v.id v_id,r.order_code,r.user_name,v.type,v.status,v.next_verify,r.order_price,r.refund_money,r.refund_total,r.refund_bean,r.apply_time,v.verify_time,r.remarks from shop_refund_apply r,verify_record v
+		 where r.id=v.refer_id and r.id=#{id} and v.type=#{type} and refer_type = 'REFUND_APPLY'
+	</select>
+
+</mapper>

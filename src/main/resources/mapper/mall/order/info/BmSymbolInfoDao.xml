@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dms.api.modules.dao.mall.order.info.BmSymbolInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.dms.api.modules.entity.mall.order.info.BmSymbolInfoEntity" id="bmSymbolInfoMap">
+        <result property="id" column="id"/>
+        <result property="symbolId" column="symbol_id"/>
+        <result property="symbolName" column="symbol_name"/>
+        <result property="symbolCode" column="symbol_code"/>
+        <result property="remarks" column="remarks"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.dms.api.modules.entity.mall.order.info.BmSymbolInfoEntity">
+		select * from bm_symbol_info where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.dms.api.modules.entity.mall.order.info.BmSymbolInfoEntity">
+		select * from bm_symbol_info
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	<select id="queryListByIds" resultType="com.dms.api.modules.entity.mall.order.info.BmSymbolInfoEntity">
+		select symbol_name ,symbol_id from bm_symbol_info
+        where 1=1
+		<if test="list != null and list.size > 0">
+			AND symbol_id in
+			<foreach item="entity" collection="list" open="(" separator="," close=")">
+				#{entity.symbolId}
+			</foreach>
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from bm_symbol_info 
+	</select>
+</mapper>
